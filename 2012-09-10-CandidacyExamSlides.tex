@@ -256,6 +256,93 @@ arbitrary unquoting. \texttt{syntax-case}, a low-level implementation of MBE, su
 functionality provided by quasiquotes.
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Typechecking quasiquotes: strict}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+-| fun plus x = <fn y => ~x + y>;
+val plus = Fn : <int> -> <int -> int>
+
+-| val w = <fn y => ~(plus <y>)>;
+val w = <(fn a => (fn b => a \%+ b))> : <int -> int -> int>
+\end{semiverbatim}
+\end{lstlistinglike}
+
+MetaML is a statically typechecked language with quasiquotes. Its typesystem guarantees that
+if a meta-program is well-typed then all possibly produced object-programs will be well-typed as well.
+
+Unlike in lisps, quasiquotes in MetaML cannot have unbound free variables, which effectively means
+that meta-programs cannot introduce new bindings (e.g. it's not possible to express \emph{let} as a macro).
+This is a sacrifice to the altar of strong type safety guarantees.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking quasiquotes: strict}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+mac (let seq x = e1 in e2 end) =
+   \$(let val x = ?e1 in ?e2 end)
+\end{semiverbatim}
+\end{lstlistinglike}
+
+MacroML is a macro system built on top of MetaML. It inherits typing discipline of its parents,
+but introduces a clever way to create certain bindings without compomising type safety.
+
+In the example above \texttt{\$} stands for "delay" and \texttt{?} stands for "force". Macro \texttt{seq}
+implements (wtf does it implement?).
+
+To typecheck the fluent binding to \texttt{x}, MacroML tracks the name of the bindee parameter in the type
+of the body parameters such as \texttt{e}i.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking quasiquotes: lenient}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+macro using(name, expr, body) \{
+  <[
+    def \$name = \$expr;
+    try \{ \$body \} finally \{ \$name.Dispose() \}
+  ]>
+\}
+
+using(db, Database("localhost"), db.LoadData())
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Nemerle allows quasiquotes to contain free variables, it even permits
+splicing into binding positions (like in \texttt{def \$name = \$expr}).
+
+This makes it impossible to typecheck quasiquotes at their declaration site,
+but the result of macro expansion that uses such quasiquotes is typechecked anyways,
+so errors are still caught at compile-time.
+
+Relaxed typechecking rules like in Nemerle have proven to be essential
+for a practical metaprogramming system.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking quasiquotes: the best of both worlds}
+
+The ideal typechecking discipline would allow programmers to freely mix
+typed and untyped quasiquotes.
+
+In F\# both quasiquoting (\texttt{<@...@>}) and splicing (\texttt{\%}) operators
+have untyped versions (\texttt{<@@...@@>} and \texttt{\%\%} respectively).
+
+Unfortunately they are only untyped in a sense that untyped splicing
+allows \texttt{Expr} instead of \texttt{Expr<'a>}. Untyped quasiquotes do perform typechecking
+using type inference to determine type bounds for holes, which are verified at runtime.
+As a result, \texttt{<@@ (\%\%x).Name @@>} won't typecheck, whereas \texttt{<@@ (\%\%x).ToString() @@>}
+will fail at runtime.
+
+In a 15 year old paper, Mark Shields, Tim Sheard and Simon Peyton Jones propose a type system
+that can defer type inference to runtime. Their findings can probably be adapted to the task at hand.
+\end{frame}
+
 \section{Challenges in macrology: hygiene}
 
 \section{Macros in Template Haskell}

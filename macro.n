@@ -1,0 +1,41 @@
+using System;
+
+// macro my_using(name: string, val, body) {
+//   <[
+//     def $(name: usesite) = $val;
+//     try { $body } finally { $(name: usesite).Dispose() }
+//   ]>
+// }
+
+// macro bar(ext) {
+//   <[ my_using("x", Foo(), { $ext; x.Compute() }) ]>
+// }
+
+// macro bar(body) {
+//   <[
+//     foo ({
+//       Console.WriteLine("from bar: " + x);
+//       $body;
+//     })
+//   ]>
+// }
+
+// macro foo(body) {
+//   <[
+//     def $("x": dyn) = 5;
+//     // macro $("x": dyn) { <[ 5 ]> };
+//     // macro x { <[ 5 ]> };
+//     $body;
+//   ]>
+// }
+
+// macro qwe() {
+//   <[ 2 + true ]>
+// }
+
+macro my(name, expr, body) {
+  <[
+    def $name = $expr;
+    try { $body } finally { $name.Dispose() }
+  ]>
+}

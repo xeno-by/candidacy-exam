@@ -1,0 +1,25 @@
+using System;
+using System.Console;
+
+// class Foo {
+//   public Compute(): void {}
+//   public Dispose(): void {}
+// }
+
+// bar({def x = Foo(); WriteLine(x)})
+
+// bar({WriteLine("from outside: " + x);})
+
+class Database {
+  public this(s: String) {
+    WriteLine("constructed")
+  }
+  public Dispose(): void {
+    WriteLine("disposed")
+  }
+  public LoadData(): void {
+    WriteLine("loaded")
+  }
+}
+
+my(db, Database("localhost"), db.LoadData())
