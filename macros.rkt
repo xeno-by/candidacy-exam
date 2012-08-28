@@ -28,9 +28,26 @@
 ;;(defmacro let (decls body)
 ;;  `((lambda ,(map car decls) ,body) ,@(map cadr decls)))
 
-(define-syntax let
-  (syntax-rules ()
-    ((let ((i e) ...) b ...)
-     ((lambda (i ...) b ...) e ...))))
+;;(define-syntax let
+;;  (syntax-rules ()
+;;    ((let ((i e) ...) b ...)
+;;     ((lambda (i ...) b ...) e ...))))
 
-(let ((x 40) (y 2)) (print (+ x y)))
+;;(let ((x 40) (y 2)) (print (+ x y)))
+
+;;(defmacro or (x y)
+;;  `(let ((t ,x))
+;;     (if t t ,y)))
+
+;;(or 42 #f)
+
+;;(let ((t #t))
+;;  (or #f t))
+
+(define-syntax forever
+  (syntax-rules ()
+    [(forever body ...)
+     (call/cc (lambda (abort)
+                (let loop () body ... (loop))))]))
+
+(forever (print 4) (print 2) (abort))

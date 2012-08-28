@@ -343,7 +343,142 @@ In a 15 year old paper, Mark Shields, Tim Sheard and Simon Peyton Jones propose 
 that can defer type inference to runtime. Their findings can probably be adapted to the task at hand.
 \end{frame}
 
-\section{Challenges in macrology: hygiene}
+\section{Challenges in macrology: bindings}
+
+\begin{frame}[fragile]
+\frametitle{Motivating example}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro or (x y)
+  `(let ((t ,x))
+     (if t t ,y)))
+
+(or 42 "strange")
+\end{semiverbatim}
+\end{lstlistinglike}
+
+One of the appealing features of macros is their ability to
+control evaluation order. For example, it's possible to write
+a short-circuiting \texttt{or} macro.
+
+In this example, however, I would like to highlight the temporary variable
+that had to be introduced in order to prevent double evaluation.
+
+The implementation is very simple. Yet it has two mistakes
+that can lead to subtle bugs. Let's take a closer look.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Mistake \#1}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro or (x y)
+  `(let ((t ,x))
+     (if t t ,y)))
+
+(let ((t \#t))
+  (or \#f t))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+The first bug manifests itself when there's a variable named \texttt{t} at the call site,
+and it's used in the second argument of the \texttt{or} macro. We can say that a variable introduced during macro expansion shadows a binding from the macro use site.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Hygiene}
+
+\begin{quote}
+Hygiene Condition for Macro Expansion.
+
+Generated identifiers that become binding instances in
+the completely expanded program must only bind variables
+that are generated at the same transcription step.
+\end{quote}
+
+\begin{flushright}
+\textemdash Eugene Kohlbecker\\
+PhD Thesis
+\end{flushright}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Breaking hygiene}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax forever
+  (syntax-rules ()
+    ((forever body ...)
+     (call/cc (lambda (abort)
+                (let loop () body ... (loop)))))))
+
+(forever (print 4) (print 2) (abort))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+At times, though, it's useful to break hygiene and meld lexical contexts
+from different transcription steps.
+
+We've seen one such example, when studying the \texttt{using} macro written in Nemerle.
+Here's another one that features a DSL for writing loops. Whenever we're inside a loop
+introduced by our DSL, we should be able to use \texttt{abort} to quit.
+
+For this snippet to work, the binding created by \texttt{forever} must be non-hygienic,
+since \texttt{abort} is supposed to be accessible from \texttt{body}.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Mistake \#2}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro or (x y)
+  `(let ((t ,x))
+     (if t t ,y)))
+
+(let ((let print))
+  (or \#f \#t))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+The second bug is, in a sense, dual to the first one. Previously, a binding introduced by a macro
+interfered with a binding at the macro use site. Now a binding introduced at the call site destroys
+a binding at the macro definition site.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Referential transparency}
+
+\begin{quote}
+Macros defined in the high-level specification language are referentially
+transparent in the sense that a macro-introduced identifier refers to the
+binding lexically visible where the macro definition appears rather than to
+the top-level binding or to the binding visible where the macro call appears.
+\end{quote}
+
+\begin{flushright}
+\textemdash Kent Dybvig et al.\\
+Syntactic Abstractions in Scheme
+\end{flushright}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{State of the art}
+
+\begin{itemize}
+\item Typical approaches to fixing the aforementioned problems
+are alpha-renaming and gensymming (from \texttt{gensym}).
+\item There are frameworks that provide hygiene and referential transparency automatically.
+Scheme is especially famous for pushing this research.
+\item These automatic frameworks usually have enough flexibility to allow for
+the use cases that require non-hygienic bindings.
+\item Some language designers, though, don't perceive the need for manual gensymming as an issue.
+\end{itemize}
+
+\end{frame}
 
 \section{Macros in Template Haskell}
 
