@@ -184,25 +184,48 @@ These slides discuss the ways to represent, analyze and generate code.
 \begin{lstlistinglike}
 \begin{semiverbatim}
 (defmacro let args
-\only<1>{\
- (cons
+  (cons
    (cons \text{\color{blue}{'lambda}}
          (cons \text{\color{red}{(map car (car args))}}
                \text{\color{violet}{(cdr args)}}))
-   \text{\color{teal}{(map cadr (car args))}}))}\
-\only<2>{\
-`(('\text{\color{blue}{lambda}} ,\text{\color{red}{(map car decls)}} ,\text{\color{violet}{body}}) . ,\text{\color{teal}{(map cadr decls)}}))
-}
+   \text{\color{teal}{(map cadr (car args))}}))
+
 \sout{(let ((\text{\color{red}{x}} \text{\color{teal}{40}}) (\text{\color{red}{y}} \text{\color{teal}{2}})) \text{\color{violet}{(print (+ x y))}})}
 
 ((\text{\color{blue}{lambda}} \text{\color{red}{(x y)}} \text{\color{violet}{(print (+ x y))}}) \text{\color{teal}{(40 2)}})
 \end{semiverbatim}
 \end{lstlistinglike}
 
-\only<1>{The code here is quite impenetrable.
-Without color coding it would be hard to understand the supposed structure of input and output.}
+The code here is quite impenetrable.
+Without color coding it would be hard to understand the supposed structure of input and output.
+\end{frame}
 
-\only<2>{}
+\begin{frame}[fragile]
+\frametitle{Improving \emph{let}}
+
+\setbeamercolor{alerted text}{fg=blue} % maybe fg=red?
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro let (decls body)
+  \alert{`}((lambda \alert{,}(map car decls) \alert{,}body) \alert{,@}(map cadr decls)))
+
+\sout{(let ((x 40) (y 2)) (print (+ x y)))}
+
+((lambda (x y) (print (+ x y))) (40 2))
+\end{semiverbatim}
+\end{lstlistinglike}
+\setbeamercolor{alerted text}{fg=blue}
+
+This snippet represents a shift towards declarativeness.
+Arguments of let are now pattern-matched in the macro signature.
+The shape of resulting form is encoded in a template.
+
+Backquote, the template-building operator, is called \emph{quasiquote}.
+By default code inside the quasiquote is not evaluated and is copied into the output verbatim
+(note that we no longer have to quote \texttt{lambda}).
+
+Comma and comma-at are called \emph{unquote} operators.
+They temporarily cancel the effect of quasiquoting, demarcating "holes" in templates.
 \end{frame}
 
 \section{Macros in Template Haskell}
