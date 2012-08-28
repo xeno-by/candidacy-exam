@@ -25,7 +25,12 @@
 ;;               (cdr args)))
 ;;   (map cadr (car args))))
 
-(defmacro let (decls body)
-  `((lambda ,(map car decls) ,body) ,@(map cadr decls)))
+;;(defmacro let (decls body)
+;;  `((lambda ,(map car decls) ,body) ,@(map cadr decls)))
+
+(define-syntax let
+  (syntax-rules ()
+    ((let ((i e) ...) b ...)
+     ((lambda (i ...) b ...) e ...))))
 
 (let ((x 40) (y 2)) (print (+ x y)))

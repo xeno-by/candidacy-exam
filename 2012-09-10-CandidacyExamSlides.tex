@@ -163,8 +163,6 @@ All the aforementioned scenarios are either already supported by Scala macros
 or will be supported in vNext!}
 \end{frame}
 
-\section{Challenges in macrology}
-
 \begin{frame}[fragile]
 \frametitle{Setting the stage}
 
@@ -178,6 +176,8 @@ Today we're going to focus on a particular challenge in macrology: tackling synt
 These slides discuss the ways to represent, analyze and generate code.
 \end{frame}
 
+\section{Challenges in macrology: notation}
+
 \begin{frame}[fragile]
 \frametitle{Revisiting \emph{let}}
 
@@ -190,7 +190,7 @@ These slides discuss the ways to represent, analyze and generate code.
                \text{\color{violet}{(cdr args)}}))
    \text{\color{teal}{(map cadr (car args))}}))
 
-\sout{(let ((\text{\color{red}{x}} \text{\color{teal}{40}}) (\text{\color{red}{y}} \text{\color{teal}{2}})) \text{\color{violet}{(print (+ x y))}})}
+(let ((\text{\color{red}{x}} \text{\color{teal}{40}}) (\text{\color{red}{y}} \text{\color{teal}{2}})) \text{\color{violet}{(print (+ x y))}})
 
 ((\text{\color{blue}{lambda}} \text{\color{red}{(x y)}} \text{\color{violet}{(print (+ x y))}}) \text{\color{teal}{(40 2)}})
 \end{semiverbatim}
@@ -209,7 +209,7 @@ Without color coding it would be hard to understand the supposed structure of in
 (defmacro let (decls body)
   \alert{`}((lambda \alert{,}(map car decls) \alert{,}body) \alert{,@}(map cadr decls)))
 
-\sout{(let ((x 40) (y 2)) (print (+ x y)))}
+(let ((x 40) (y 2)) (print (+ x y)))
 
 ((lambda (x y) (print (+ x y))) (40 2))
 \end{semiverbatim}
@@ -228,14 +228,42 @@ Comma and comma-at are called \emph{unquote} operators.
 They temporarily cancel the effect of quasiquoting, demarcating "holes" in templates.
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Pushing the envelope}
+
+\setbeamercolor{alerted text}{fg=blue} % maybe fg=red?
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax let
+  (syntax-rules ()
+    ((let ((name expr) ...) body ...)
+     ((lambda (name ...) body ...) expr ...))))
+
+(let ((x 40) (y 2)) (print (+ x y)))
+
+((lambda (x y) (print (+ x y))) (40 2))
+\end{semiverbatim}
+\end{lstlistinglike}
+\setbeamercolor{alerted text}{fg=blue}
+
+This amazing notation comes from Scheme and is dubbed \emph{macro by example} (MBE).
+With the ellipsis operator it naturally captures repetitions in the input form
+and translates them into the output.
+
+\texttt{syntax-rules} is a shortcut that eliminates the syntactic overhead of quasiquoting at a cost
+of supporting unquotes only for variables bound in a match. However MBE per se doesn't prevent
+arbitrary unquoting. \texttt{syntax-case}, a low-level implementation of MBE, supports all the
+functionality provided by quasiquotes.
+\end{frame}
+
+\section{Challenges in macrology: hygiene}
+
 \section{Macros in Template Haskell}
 
 \section{Macros in Nemerle}
 
 \section{Macros in Racket}
 
-\section{Macros in Scala}
-
-\section{Future work}
+\section{Our research}
 
 \end{document}
