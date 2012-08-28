@@ -475,12 +475,94 @@ are alpha-renaming and gensymming (from \texttt{gensym}).
 Scheme is especially famous for pushing this research.
 \item These automatic frameworks usually have enough flexibility to allow for
 the use cases that require non-hygienic bindings.
-\item Some language designers, though, don't perceive the need for manual gensymming as an issue.
 \end{itemize}
 
 \end{frame}
 
 \section{Macros in Template Haskell}
+
+\begin{frame}[fragile]
+\frametitle{\texttt{printf}}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+\alert<1>{printf :: String -> \alert<2>{Expr}}
+printf s = gen (parse s) \alert<2>{[|} "" \alert<2>{|]}
+
+gen :: [Format] -> Expr -> Expr
+gen [] x = x
+gen (D : xs) x = \alert<2>{[|} \only<1-2,4->{\\n}\only<3>{\text{\color{violet}{\\n}}} -> \alert<2>{\$(}gen xs \alert<2>{[|} \alert<2>{\$}x \alert<3>{++} show \only<1-2,4->{n}\only<3>{\text{\color{violet}{n}}} \alert<2>{|]}\alert<2>{)} \alert<2>{|]}
+gen (S : xs) x = \alert<2>{[|} \only<1-2,4->{\\s}\only<3>{\text{\color{red}{\\s}}} -> \alert<2>{\$(}gen xs \alert<2>{[|} \alert<2>{\$}x \alert<3>{++} \only<1-2,4->{s}\only<3>{\text{\color{red}{s}}} \alert<2>{|]}\alert<2>{)} \alert<2>{|]}
+gen (L s : xs) x = gen xs \alert<2>{[|} \alert<2>{\$}x \alert<3>{++} \alert<2>{\$(}\alert<4>{lift s}\alert<2>{)} \alert<2>{|]}
+
+\only<1,3->{\alert<1>{\$(}}\only<2>{\text{\color{teal}{\$(}}}printf "\alert<4>{Error:} %s\alert<4>{ on line }%d"\only<1,3->{\alert<1>{)}}\only<2>{\text{\color{teal}{)}}} msg line
+
+(\only<1-2,4->{\\s0}\only<3>{\text{\color{red}{\\s0}}} -> \only<1-2,4->{\\n1}\only<3>{\text{\color{violet}{\\n1}}} ->
+  \alert<4>{"Error: "} \alert<3>{++} \only<1-2,4->{s0}\only<3>{\text{\color{red}{s0}}} \alert<3>{++} \alert<4>{" on line "} \alert<3>{++} show \only<1-2,4->{n1}\only<3>{\text{\color{violet}{n1}}})
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\only<1>{In Template Haskell macros don't need a special declaration form
+(unlike in Lisp, they are first-class),
+at a cost of requiring an explicit trigger for macro expansion.}
+
+\only<2>{Template Haskell has the notion of quasiquoting and unquoting (called \emph{splicing}
+in authors' terms). Splicing outside quasiquotes (or an explicit call to \texttt{splice}) triggers macro expansion.}
+
+\only<3>{Quasiquotes automatically alpha-rename introduced identifiers to ensure hygiene.
+Template Haskell also solves the referential transparency problem by implementing cross-stage persistence
+for static symbols.}
+
+\only<4>{For non-static symbols, general case of cross-stage persistence is undecidable.
+However if the programmer knows how to reproduce a certain datum at runtime, he implements
+the \texttt{Lift} typeclass and calls \texttt{lift}.}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bindings}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+cross2a :: Expr -> Expr -> Expr
+cross2a f g = [| \\(x,y) -> (\$f x, \$g y) |]
+
+cross2c :: Expr -> Expr -> Expr
+cross2c f g =
+  do \{ x <- gensym "x"
+     ; y <- gensym "y"
+     ; ft <- f
+     ; gt <- g
+     ; return (Lam [Ptup [Pvar x, Pvar y]]
+                   (Tup  [App ft (Var x)
+                         ,App gt (Var y)]))
+     \}
+\end{semiverbatim}
+\end{lstlistinglike}
+
+At the low level of Template Haskell lie plain ADTs that represent program fragments.
+Quotation monad can make low-level ASTs hygienic (but also may ignore hygiene).
+High level of syntactic abstraction is represented by quasiquotes, which translate to
+the hygienic quotation monad.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking}
+
+\begin{itemize}
+\item Quasiquotes are expanded in \emph{re}namer, because later in the pipeline bindings are frozen.
+\item Every quotation is then sanity-checked in typer to reject nonsense like \texttt{[| "hello" \&\& True |]}.
+Having passed the check, quotations pass the type check and are assigned the \texttt{Q Exp} type.
+\item After quotations are typechecked, macros are expanded, and the compilation goes on just
+as if the programmer had written the expanded program in the first place.
+\end{itemize}
+
+A retrospective write-up from TH developers indicates that:
+\begin{itemize}
+\item There is a real need for strongly typed quotes \texttt{TExp a} (for more robustness).
+\item Normal quotes shouldn't be typechecked at all (to allow for declaration-introducing
+splices inside quasiquotes).
+\end{itemize}
+\end{frame}
 
 \section{Macros in Nemerle}
 
