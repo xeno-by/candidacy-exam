@@ -74,7 +74,7 @@
 
 \begin{frame}[fragile]
 \frametitle{The essence of macros}
-Macros = programmable code transformers run inside the compiler
+Macros are programmable code transformers
 \end{frame}
 
 \begin{frame}[fragile]
@@ -90,8 +90,11 @@ Macros = programmable code transformers run inside the compiler
 \end{semiverbatim}
 \end{lstlistinglike}
 
-\emph{let} is a Lisp function. Since it is defined as a macro,
-it's automatically plugged into the compiler after being read.
+Here we declare \emph{let}, a Lisp function. Since it is declared as a macro,
+it's automatically plugged into the Lisp evaluator.
+
+We can say that the evaluator installs a macro transformer implemented by the body of the macro
+into a slot named \emph{let}.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -109,8 +112,9 @@ it's automatically plugged into the compiler after being read.
 \end{semiverbatim}
 \end{lstlistinglike}
 
-After the compiler reads a form that is an invocation of \emph{let},
-it yields control to the macro, passing it syntactic representations of the argument forms.
+When the evaluator encounters a form that is an application of \emph{let},
+it yields control to the corresponding macro transformer,
+passing it the argument forms.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -130,12 +134,11 @@ it yields control to the macro, passing it syntactic representations of the argu
 \end{semiverbatim}
 \end{lstlistinglike}
 
-The macro takes syntactic representations passed by the compiler,
-and reassembles them into a new form (this is called \emph{macro expansion}).
+The macro transformer takes the forms passed by the evaluator,
+and computes a resulting form (this is called \emph{macro expansion}).
 
-After that the compiler replaces the macro invocation with the form
-produced by macro expansion. Compilation proceeds as if the programmer
-has written the resulting form in the first place.
+After that the evaluator proceeds with the form produced by macro expansion.
+The value of the new form is returned as the value of the original form.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -150,9 +153,11 @@ has written the resulting form in the first place.
 
 \vskip15pt
 
-\only<2>{Actually all these scenarios are either already supported by Scala macros
-or will be supported in vNext!}
+\only<2>{Actually these use cases come from our experience with macros in Scala,
+which we developed this year.
 
+All the aforementioned scenarios are either already supported by Scala macros
+or will be supported in vNext!}
 \end{frame}
 
 \section{Challenges in macrology}
@@ -160,21 +165,14 @@ or will be supported in vNext!}
 \begin{frame}[fragile]
 \frametitle{Setting the stage}
 
-There are a lot of macro flavors classified by:
-\begin{itemize}
-\item Execution phase (lexical, syntactic, semantic)
-\item Meta-language (homogeneous, heterogeneous)
-\end{itemize}
+In this talk we'll be looking into macros for compiled programming languages,
+i.e. macros as extensions to compilers.
 
-\end{frame}
+Different combinations of junction points (function applications, code annotations, custom grammar rules, etc)
+and tightness of the integration (parser, namer, typer, etc) produce different challenges.
 
-\begin{frame}[fragile]
-\frametitle{Macros}
-\begin{lstlisting}
-(defmacro let1 (decls body)
-  (print decls)
-  decls)
-\end{lstlisting}
+Today we're going to focus on a particular challenge in macrology: tackling syntactic abstractions.
+These slides discuss the ways to represent, analyze and generate code.
 \end{frame}
 
 \section{Macros in Template Haskell}
