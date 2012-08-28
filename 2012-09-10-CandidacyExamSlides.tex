@@ -1,3 +1,4 @@
+
 \documentclass[hyperref={bookmarks=false}]{beamer}
 
 \useoutertheme{infolines}
@@ -19,49 +20,35 @@
 \usepackage[parfill]{parskip}
 \usepackage{color}
 \usepackage{listings}
+\usepackage{textcomp}
+\usepackage[linewidth=0.5pt]{mdframed}
 \usepackage{hyperref}
+\usepackage{ulem}
+\normalem
 \hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
 \title{Scala Macros}
 
-\definecolor{linkblue}{RGB}{49,57,174}
-\definecolor{dkgreen}{rgb}{0,0.6,0}
-\definecolor{gray}{rgb}{0.5,0.5,0.5}
-\definecolor{mauve}{rgb}{0.58,0,0.82}
-
-\lstdefinelanguage{scala}{
-  morekeywords={abstract,annotation,case,catch,class,def,%
-    do,else,extends,false,final,finally,%
-    for,if,implicit,import,match,mixin,%
-    new,null,object,override,package,%
-    private,protected,requires,return,sealed,%
-    super,this,throw,trait,true,try,%
-    type,val,var,while,with,yield,
-    macro},
-  sensitive=true,
-  morecomment=[l]{//},
-  morecomment=[n]{/*}{*/}
-%  morestring=[b]",
-%  morestring=[b]',
-%  morestring=[b]"""
-}
-
 \lstset{frame=tb,
-  language=scala,
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
   columns=flexible,
   basicstyle={\small\ttfamily},
   numbers=none,
-  numberstyle=\tiny\color{gray},
+  numberstyle=\tiny\color{0.5,0.5,0.5},
   keywordstyle=\color{blue},
-  commentstyle=\color{dkgreen},
-  stringstyle=\color{mauve},
+  commentstyle=\color{0,0.6,0},
+  stringstyle=\color{0.58,0,0.82},
   frame=single,
   breaklines=true,
   breakatwhitespace=true
   tabsize=3
 }
+
+\setbeamercolor{alerted text}{fg=blue}
+\setbeamerfont{alerted text}{series=\bfseries,family=\ttfamily}
+
+\newmdenv[innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=-1mm, innerbottommargin=2mm, leftmargin=-1mm, rightmargin=-1mm]{lstlistinglike}
 
 \AtBeginSection[]
 {
@@ -75,7 +62,8 @@
 
 \title{Metaprogramming with Macros}
 \author{Eugene Burmako}
-\institute{\'Ecole Polytechnique F\'ed\'erale de Lausanne}
+\institute{\'Ecole Polytechnique F\'ed\'erale de Lausanne \\
+           \texttt{http://scalamacros.org/}}
 \date{10 September 2012}
 {
 \setbeamertemplate{footline}{}
@@ -83,5 +71,120 @@
   \titlepage
 \end{frame}
 }
+
+\begin{frame}[fragile]
+\frametitle{The essence of macros}
+Macros = programmable code transformers run inside the compiler
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example} % \only<1>
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(\alert{defmacro} let (decl body)
+  (cons
+   (cons 'lambda
+         (cons (list (car decl)) body))
+   (cdr decl)))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\emph{let} is a Lisp function. Since it is defined as a macro,
+it's automatically plugged into the compiler after being read.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example} % \only<2>
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro \text{\color{blue}{let}} (\text{\color{red}{decl}} \text{\color{violet}{body}})
+  (cons
+   (cons 'lambda
+         (cons (list (car decl)) body))
+   (cdr decl)))
+
+(\text{\color{blue}{let}} \text{\color{red}{(x 42)}} \text{\color{violet}{(print x)}})
+\end{semiverbatim}
+\end{lstlistinglike}
+
+After the compiler reads a form that is an invocation of \emph{let},
+it yields control to the macro, passing it syntactic representations of the argument forms.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example} % \only<3>
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro let (\text{\color{red}{decl}} \text{\color{violet}{body}})
+  (cons
+   (cons \text{\color{blue}{'lambda}}
+         (cons (list \text{\color{red}{(car decl)}}) \text{\color{violet}{body}}))
+   \text{\color{red}{(cdr decl)}}))
+
+\sout{(let \text{\color{red}{(x 42)}} \text{\color{violet}{(print x)}})}
+
+((\text{\color{blue}{lambda}} (\text{\color{red}{x}}) \text{\color{violet}{(print x)}}) \text{\color{red}{42}})
+\end{semiverbatim}
+\end{lstlistinglike}
+
+The macro takes syntactic representations passed by the compiler,
+and reassembles them into a new form (this is called \emph{macro expansion}).
+
+After that the compiler replaces the macro invocation with the form
+produced by macro expansion. Compilation proceeds as if the programmer
+has written the resulting form in the first place.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Use cases}
+
+\begin{itemize}
+\item Deeply embedded DSLs (database access, testing)
+\item Optimization (programmable inlining, fusion)
+\item Analysis (integrated proof-checker)
+\item Effects (effect containment and propagation)
+\end{itemize}
+
+\vskip15pt
+
+\only<2>{Actually all these scenarios are either already supported by Scala macros
+or will be supported in vNext!}
+
+\end{frame}
+
+\section{Challenges in macrology}
+
+\begin{frame}[fragile]
+\frametitle{Setting the stage}
+
+There are a lot of macro flavors classified by:
+\begin{itemize}
+\item Execution phase (lexical, syntactic, semantic)
+\item Meta-language (homogeneous, heterogeneous)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Macros}
+\begin{lstlisting}
+(defmacro let1 (decls body)
+  (print decls)
+  decls)
+\end{lstlisting}
+\end{frame}
+
+\section{Macros in Template Haskell}
+
+\section{Macros in Nemerle}
+
+\section{Macros in Racket}
+
+\section{Macros in Scala}
+
+\section{Future work}
 
 \end{document}
