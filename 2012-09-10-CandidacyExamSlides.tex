@@ -82,11 +82,12 @@ Macros are programmable code transformers
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
-(\alert{defmacro} let (decl body)
+(\alert{defmacro} let args
   (cons
    (cons 'lambda
-         (cons (list (car decl)) body))
-   (cdr decl)))
+         (cons (map car (car args))
+               (cdr args)))
+   (map cadr (car args))))
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -102,19 +103,20 @@ into a slot named \emph{let}.
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
-(defmacro \text{\color{blue}{let}} (\text{\color{red}{decl}} \text{\color{violet}{body}})
+(defmacro \text{\color{blue}{let}} \text{\color{violet}{args}}
   (cons
    (cons 'lambda
-         (cons (list (car decl)) body))
-   (cdr decl)))
+         (cons (map car (car args))
+               (cdr args)))
+   (map cadr (car args))))
 
-(\text{\color{blue}{let}} \text{\color{red}{(x 42)}} \text{\color{violet}{(print x)}})
+(\text{\color{blue}{let}} \text{\color{violet}{((x 40) (y 2)) (print (+ x y))}})
 \end{semiverbatim}
 \end{lstlistinglike}
 
 When the evaluator encounters a form that is an application of \emph{let},
 it yields control to the corresponding macro transformer,
-passing it the argument forms.
+passing it the tail of the form.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -122,15 +124,16 @@ passing it the argument forms.
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
-(defmacro let (\text{\color{red}{decl}} \text{\color{violet}{body}})
+(defmacro let args
   (cons
    (cons \text{\color{blue}{'lambda}}
-         (cons (list \text{\color{red}{(car decl)}}) \text{\color{violet}{body}}))
-   \text{\color{red}{(cdr decl)}}))
+         (cons \text{\color{red}{(map car (car args))}}
+               \text{\color{violet}{(cdr args)}}))
+   \text{\color{teal}{(map cadr (car args))}}))
 
-\sout{(let \text{\color{red}{(x 42)}} \text{\color{violet}{(print x)}})}
+\sout{(let ((\text{\color{red}{x}} \text{\color{teal}{40}}) (\text{\color{red}{y}} \text{\color{teal}{2}})) \text{\color{violet}{(print (+ x y))}})}
 
-((\text{\color{blue}{lambda}} (\text{\color{red}{x}}) \text{\color{violet}{(print x)}}) \text{\color{red}{42}})
+((\text{\color{blue}{lambda}} \text{\color{red}{(x y)}} \text{\color{violet}{(print (+ x y))}}) \text{\color{teal}{(40 2)}})
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -173,6 +176,33 @@ and tightness of the integration (parser, namer, typer, etc) produce different c
 
 Today we're going to focus on a particular challenge in macrology: tackling syntactic abstractions.
 These slides discuss the ways to represent, analyze and generate code.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Revisiting \emph{let}}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(defmacro let args
+\only<1>{\
+ (cons
+   (cons \text{\color{blue}{'lambda}}
+         (cons \text{\color{red}{(map car (car args))}}
+               \text{\color{violet}{(cdr args)}}))
+   \text{\color{teal}{(map cadr (car args))}}))}\
+\only<2>{\
+`(('\text{\color{blue}{lambda}} ,\text{\color{red}{(map car decls)}} ,\text{\color{violet}{body}}) . ,\text{\color{teal}{(map cadr decls)}}))
+}
+\sout{(let ((\text{\color{red}{x}} \text{\color{teal}{40}}) (\text{\color{red}{y}} \text{\color{teal}{2}})) \text{\color{violet}{(print (+ x y))}})}
+
+((\text{\color{blue}{lambda}} \text{\color{red}{(x y)}} \text{\color{violet}{(print (+ x y))}}) \text{\color{teal}{(40 2)}})
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\only<1>{The code here is quite impenetrable.
+Without color coding it would be hard to understand the supposed structure of input and output.}
+
+\only<2>{}
 \end{frame}
 
 \section{Macros in Template Haskell}
