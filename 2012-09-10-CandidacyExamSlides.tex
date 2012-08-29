@@ -337,7 +337,7 @@ that can defer type inference to runtime. Their findings can probably be adapted
   `(let ((t ,x))
      (if t t ,y)))
 
-(or 42 "strange")
+(or 42 "this can't be")
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -458,6 +458,8 @@ are alpha-renaming and gensymming.
 Scheme is especially famous for pushing this research.
 \item These automatic frameworks usually have enough flexibility to allow for
 the use cases that require non-hygienic bindings.
+\item Some languages are doing almost fine without renaming,
+which simplifies things at a cost of an occasional non-hygienity.
 \end{itemize}
 
 \end{frame}
@@ -542,7 +544,7 @@ as if the programmer had written the expanded program in the first place.
 
 A retrospective write-up from TH developers indicates that:
 \begin{itemize}
-\item There is a real need for strongly typed quotes \texttt{TExp a} (for more robustness).
+\item There is a real need for statically typed quotes \texttt{TExp a} (for more robustness).
 \item Normal quotes shouldn't be typechecked at all (to allow for more flexibility, with an important
 particular case of splicing into binding positions).
 \end{itemize}
@@ -663,26 +665,114 @@ assigned to the current macro expansion:
 
 \begin{frame}[fragile]
 \frametitle{vCurrent}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+def assert(cond: Boolean, msg: Any) = macro m
+def m(c: Ctx)(cond: c.Expr[Boolean], msg: c.Expr[Any]) =
+  if (assertionsEnabled)
+    // if (!cond) raise(msg)
+    If(Select(cond.tree, newTermName("!")),
+        Apply(Ident(newTermName("raise")), List(msg.tree)),
+        Literal(Constant(())))
+  else
+    Literal(Constant(())
+
+import assert
+assert(2 + 2 == 4, "this can't be")
+\end{semiverbatim}
+\end{lstlistinglike}
+
+The Scala macros experiment started as a minimalistic macro system.
+We didn't admit a special notation for quasiquoting, neither we supported hygiene.
+Since Scala is a production-grade language, this was also a careful first step
+in popularizing compile-time metaprogramming.
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Use cases}
+\frametitle{vCurrent}
 
+\begin{lstlistinglike}
+\begin{semiverbatim}
+def \only<1>{raise}\only<2>{\text{\color{blue}{raise}}}(msg: Any) = throw new AssertionError(msg)
+
+def assert(cond: Boolean, msg: Any) = macro m
+def m(c: Ctx)(cond: c.Expr[Boolean], msg: c.Expr[Any]) =
+  if (assertionsEnabled)
+    \alert<1>{c.reify(}if (!cond\alert<1>{.splice}) \only<1>{raise}\only<2>{\text{\color{blue}{raise}}}(msg)\alert<1>{)}
+  else
+    \alert<1>{c.reify(}()\alert<1>{)}
+
+object Test extends App \{
+  def \only<1>{raise}\only<2>{\text{\color{red}{raise}}}(msg: Any) = \{ /* referential transparency */ \}
+  assert(2 + 2 == 3, "this can be")
+\}
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\only<1>{Later we come up with the idea of \texttt{reify}, which turns out
+(possibly parameterized) statically-typed templates of Scala code into syntax objects.
+In a sense this notion is very similar to MacroML.}
+
+\only<2>{\texttt{reify} is the middle-man between raw unhygienic templates
+and syntax objects. It's a good place to implement support for hygiene
+and referential transparency.}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{vCurrent}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+abstract class Universe extends Symbols
+                           with Types
+                           with Trees
+                           with ...
+\{
+  def \alert<1>{reify}[T](expr: T): Expr[T] =
+    \alert<1>{macro} Reifiers.reifyTree[T]
+\}
+\end{semiverbatim}
+\end{lstlistinglike}
+
+A curious fact about \texttt{reify} is that it is just a macro,
+yet it provides a quasiquoting and hygiene facility without touching the compiler.
+
+Macros in Scala start from a minimalistic core, but are capable of
+becoming hygienic and referentially transparent. That's why we call our
+macro system \emph{self-cleaning}.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Adoption}
+
+We dedicated a lot of time to making macros release-worthy.
+Since March they are a part of Scala's mainline, and the upcoming
+release of 2.10.0 will include macros as an experimental feature.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Projects and ideas}
 \begin{itemize}
 \item Deeply embedded DSLs (database access, testing)
 \item Optimization (programmable inlining, fusion)
 \item Analysis (integrated proof-checker)
 \item Effects (effect containment and propagation)
+\item ...
 \end{itemize}
-
-\vskip15pt
-
-\only<2>{Actually all the aforementioned scenarios are either already supported by Scala macros
-or will be supported in vNext!}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{vNext}
+\frametitle{Future work}
+\begin{itemize}
+\item Lenient typechecking (currently arguments to macro expansions and, consequently,
+reified templates are statically typed, which has proven to be a problem when writing
+interesting macros).
+\item Synergy with the type system (implicit macros, type macros, macro annotations
+and their combinations enable some of the interesting techniques described above).
+\item Minimalizing Scala (macros have already allowed us to remove an entire phase
+in the compiler and implement full-fledged type reification - this can be pushed even further).
+\end{itemize}
 \end{frame}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -693,6 +783,24 @@ or will be supported in vNext!}
 \item Is it ok to copy/paste snippets and drawings from the papers being studied?
 \item Examples. Are they any good?
 \item Minimal volume of the write-up?
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Backup slides}
+\begin{enumerate}
+\item How is one supposed to debug macros?
+\item Why the need for analytic macros?
+\item Dynamic typing as staged type inference
+\item Hygiene in Clojure
+\item Example of a type macro in Nemerle
+\item Example of a syntax macro in Nemerle
+\item Implicit macros (Heather's example)
+\item Type macros
+\item Macro annotations
+\item Slide about descartes
+\item Slide about an integrated prover
+\item Macros in Tex
 \end{enumerate}
 \end{frame}
 
