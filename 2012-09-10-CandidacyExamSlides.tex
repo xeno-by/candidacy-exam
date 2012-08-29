@@ -24,6 +24,7 @@
 \usepackage[linewidth=0.5pt]{mdframed}
 \usepackage{hyperref}
 \usepackage{ulem}
+\usepackage{tikz}
 \normalem
 \hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
 \title{Scala Macros}
@@ -549,7 +550,8 @@ the hygienic quotation monad.
 \frametitle{Typechecking}
 
 \begin{itemize}
-\item Quasiquotes are expanded in \emph{re}namer, because later in the pipeline bindings are frozen.
+\item Quasiquotes are expanded in \emph{re}namer (later in the pipeline bindings are frozen),
+and they must not contain unbound free symbols.
 \item Every quotation is then sanity-checked in typer to reject nonsense like \texttt{[| "hello" \&\& True |]}.
 Having passed the check, quotations pass the type check and are assigned the \texttt{Q Exp} type.
 \item After quotations are typechecked, macros are expanded, and the compilation goes on just
@@ -559,12 +561,122 @@ as if the programmer had written the expanded program in the first place.
 A retrospective write-up from TH developers indicates that:
 \begin{itemize}
 \item There is a real need for strongly typed quotes \texttt{TExp a} (for more robustness).
-\item Normal quotes shouldn't be typechecked at all (to allow for declaration-introducing
-splices inside quasiquotes).
+\item Normal quotes shouldn't be typechecked at all (to allow for more flexibility, with an important
+particular case of splicing into binding positions).
 \end{itemize}
 \end{frame}
 
 \section{Macros in Nemerle}
+
+\begin{frame}[fragile]
+\frametitle{Overview}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+\alert<1>{macro} identity(\only<1>{e}\only<2>{\text{\color{teal}{e}}}) \{
+  <[ def \only<1>{f}\only<2>{\text{\color{red}{f}}}(\only<1>{x}\only<2>{\text{\color{blue}{x}}}) \{ \only<1>{x}\only<2>{\text{\color{blue}{x}}} \}; \only<1>{f}\only<2>{\text{\color{red}{f}}}(\$\only<1>{e}\only<2>{\text{\color{teal}{e}}}) ]>
+\}
+
+identity\alert<1>{(}\only<1>{f(1)}\only<2>{\text{\color{teal}{f(1)}}}\alert<1>{)}
+
+\{
+  def \only<1>{f_42}\only<2>{\text{\color{red}{f_42}}}(\only<1>{x_43}\only<2>{\text{\color{blue}{x_43}}}) \{ \only<1>{x_43}\only<2>{\text{\color{blue}{x_43}}} \};
+  \only<1>{f_42}\only<2>{\text{\color{red}{f_42}}}(\only<1>{f(1)}\only<2>{\text{\color{teal}{f(1)}}})
+\}
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\only<1>{Macros in Nemerle are Lisp-like in a sense that they are second-class, but
+are transparent to the user.
+
+Unlike Lisp, Nemerle is statically typed and has rich syntax.
+Macros provide extension points to both of these aspects.
+They can change syntax and control typechecking (alas, outside the scope of this talk).}
+
+\only<2>{Nemerle has quasiquotes and unquotes (called \emph{splices} like in Template Haskell).
+They provide automatic alpha-renaming to preserve hygiene.
+Cross-stage persistence is only supported for static symbols.}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+cache(e: Expr): Expr * Expr \{
+  | <[ \$o.\$m ]> => (<[ def tmp = \$o ]>, <[ tmp.\$m ]>)
+  | <[ \$o[\$i] ]> => (<[ def (tmp1, tmp2) = (\$o, \$i) ]>,
+                     <[ tmp1[tmp2] ]>)
+  | _ => (<[ () ]>, e)
+\}
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Designers of Nemerle were aware of the "too strongly typed" problem of quasiquotes
+in Template Haskell, so they decided not to typecheck them before they are used
+in macro expansions.
+
+In fact they went even further - quasiquotes are not only untyped, but they also
+don't get their free variables resolved until being used (with an exception for
+references to static symbols). This defies one of the aspects of referential transparency,
+but in return provides flexibility, e.g. splicing into binding positions at zero implementation cost.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Hygiene}
+
+\only<1>{Nemerle assigns colors to every identifier in the program.}
+
+\only<2->{
+\vskip15pt
+\begin{figure}
+\centering
+\begin{tikzpicture}
+\draw[line width=1pt] (0.0, 0.0) -- (1.5, 2.5);
+\draw[line width=1pt] (3.0, 0.0) -- (1.5, 2.5);
+\draw[line width=1pt] (0.0, 0.0) -- (3.0, 0.0);
+\draw [->] (3.2, 1.5) -- (5.0, 1.5) node[pos=-0.15, above right] {\scriptsize{macro expansion}};
+\draw[line width=1pt] (5.2, 0.0) -- (6.7, 2.5);
+\draw[line width=1pt] (8.2, 0.0) -- (6.7, 2.5);
+\draw[line width=1pt] (5.2, 0.0) -- (6.0, 0.0);
+\draw[line width=1pt] (6.0, 0.0) -- (6.5, 0.8);
+\draw[line width=1pt] (6.5, 0.8) -- (7.0, 0.0);
+\draw[line width=1pt] (7.0, 0.0) -- (8.2, 0.0);
+%%------------
+\draw[line width=1pt] (6.5, 0.8) -- (5.7, -0.48);
+\draw[line width=1pt] (6.5, 0.8) -- (7.3, -0.48);
+\draw[line width=1pt] (5.7, -0.48) -- (6.0, -0.48);
+\draw[line width=1pt] (6.7, -0.48) -- (7.3, -0.48);
+\draw[line width=1pt] (6.0, -0.48) -- (6.5, -0.2);
+\draw[line width=1pt] (6.7, -0.48) -- (6.5, -0.2);
+\path[fill=gray] (6.5, 0.8) -- (5.7, -0.48) -- (6.0, -0.48) -- (6.5, -0.2) -- (6.7, -0.48) -- (7.3, -0.48) -- cycle;
+%%------------
+\draw[line width=1pt] (6.0, -0.48) -- (6.7, -0.48);
+\end{tikzpicture}
+\end{figure}
+\vskip15pt}
+
+\only<2>{Given \texttt{u}, the color of the use site, and \texttt{m}, a fresh color
+assigned to the current macro expansion:
+\begin{itemize}
+\item Most identifiers introduced in that expansion get colored with \texttt{m}
+\item Macro arguments and \texttt{\$(name:\ usesite)} splices get colored with \texttt{u}
+\item \texttt{\$(name:\ dyn)} splices become polychromatic
+\item Colors can also be tinkered with manually
+\end{itemize}
+}
+
+\only<3>{After all colors are resolved it is easy to bind identifiers:
+\begin{itemize}
+\item Use refers to the nearest preceding declaration of the matching color
+(polychromatics match any color, others only match their own)
+\item Unbound identifiers are looked up in global scope.
+\end{itemize}}
+
+\end{frame}
+
+%% Mention Nemerle's use cases:
+%% 1) sublanguages from strings, 2) type pimpers, 3) aop
 
 \section{Macros in Racket}
 
