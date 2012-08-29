@@ -257,7 +257,7 @@ val it = 125 : int
 \end{lstlistinglike}
 
 \only<1>{MetaML is a staged language. Programs in MetaML can generate and run
-programs at runtime, which can do the same, and so on.
+programs at runtime, these programs can do the same, and so on.
 
 Quasiquotes here represent templates of the programs to be generated
 and delineate execution stages.
@@ -271,7 +271,7 @@ typechecking errors.}
 and receive one of the \texttt{<a>} types (which means
 "code that evaluates to a value of type \texttt{a}").
 Here \texttt{cube} is a quasiquote that represents
-a function from int to int.
+a function from \texttt{int} to \texttt{int}.
 
 Therefore, unlike in Lisps, quasiquotes in MetaML cannot have
 unbound free variables, which implies that meta-programs
@@ -289,7 +289,14 @@ mac (let seq x = e1 in e2 end) =
 \end{semiverbatim}
 \end{lstlistinglike}
 
-MacroML is a macro system built on top of MetaML. It inherits the typing discipline of its parent,
+MacroML is a macro system built on top of MetaML.
+
+Instead of arbitrary number of stages like in MetaML,
+it has only two stages: compile-time and runtime.
+Explicit \texttt{run} is removed and is carried out implicitly
+by macro expansion
+
+MacroML inherits the typing discipline of its parent,
 but introduces a clever way to create certain bindings without compomising type safety.
 
 In the example above \texttt{\$} stands for "delay" and \texttt{?} stands for "force". Macro \texttt{seq}
@@ -378,11 +385,11 @@ that can lead to subtle bugs. Let's take a closer look.
 \begin{lstlistinglike}
 \begin{semiverbatim}
 (defmacro or (x y)
-  `(let ((t ,x))
-     (if t t ,y)))
+  `(let ((\text{\color{red}{t}} ,x))
+     (if t t \text{\color{red}{,y}})))
 
-(let ((t \#t))
-  (or \#f t))
+(let ((\text{\color{blue}{t}} \#t))
+  (or \#f \text{\color{red}{t}}))
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -415,10 +422,10 @@ PhD Thesis
 (define-syntax forever
   (syntax-rules ()
     ((forever body ...)
-     (call/cc (lambda (abort)
+     (call/cc (lambda (\text{\color{red}{abort}})
                 (let loop () body ... (loop)))))))
 
-(forever (print 4) (print 2) (abort))
+(forever (print 4) (print 2) (\text{\color{blue}{abort}}))
 \end{semiverbatim}
 \end{lstlistinglike}
 
