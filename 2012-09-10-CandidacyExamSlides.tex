@@ -244,26 +244,39 @@ functionality provided by quasiquotes (we'll study it later).
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
--| fun plus x = <fn y => ~x + y>;
-val plus = Fn : <int> -> <int -> int>
+-| fun pow n = <fn x =>
+    ~(if n = 0 then <1> else <x * (~(pow (n - 1)) x)>)>;
+val pow = fn : int -> <int -> int>
 
--| val w = <fn y => ~(plus <y>)>;
-val w = <(fn a => (fn b => a \%+ b))> : <int -> int -> int>
+-| val cube = (pow 3);
+val cube = <(fn a => x \%* x \%* x \%* 1)> : <int -> int>
+
+-| (run cube) 5;
+val it = 125 : int
 \end{semiverbatim}
 \end{lstlistinglike}
 
-MetaML is a statically typechecked staged language. Here \texttt{<a>} means
-"code that evaluates to a value of type \texttt{a}". For example, \texttt{w}
-is a quasiquote that represents a function from two ints to an int.
-All quasiquotes in MetaML are typechecked like that.
+\only<1>{MetaML is a staged language. Programs in MetaML can generate and run
+programs at runtime, which can do the same, and so on.
 
-Therefore, unlike in Lisps, quasiquotes in MetaML cannot have unbound free variables,
-which implies that meta-programs cannot modify bindings
-(e.g. in MetaML it's impossible to express \texttt{let} as a macro).
+Quasiquotes here represent templates of the programs to be generated
+and delineate execution stages.
 
-This design decision was probably motivated by the fact that MetaML isn't about macros,
-but is about staging. Quasiquotes are expanded at runtime, which is too late to check
-the consistency of bindings.
+Due to its specific nature, MetaML requires strong guarantees
+from the type system. At runtime, if code generation fails
+because of an error in the meta-program, it's too late to report
+typechecking errors.}
+
+\only<2>{All quasiquotes in MetaML are typechecked
+and receive one of the \texttt{<a>} types (which means
+"code that evaluates to a value of type \texttt{a}").
+Here \texttt{cube} is a quasiquote that represents
+a function from int to int.
+
+Therefore, unlike in Lisps, quasiquotes in MetaML cannot have
+unbound free variables, which implies that meta-programs
+cannot modify bindings
+(e.g. in MetaML it's impossible to express \texttt{let} as a macro).}
 \end{frame}
 
 \begin{frame}[fragile]
