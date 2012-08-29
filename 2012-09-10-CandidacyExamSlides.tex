@@ -628,7 +628,7 @@ in Template Haskell, so they decided not to typecheck them before they are used
 in macro expansions.
 
 In fact they went even further - quasiquotes are not only untyped, but they also
-don't get their free variables resolved until being used (with an exception for
+don't get their bindings resolved until used (with an exception for
 references to static symbols). This defies one of the aspects of referential transparency,
 but in return provides flexibility, e.g. splicing into binding positions at zero implementation cost.
 \end{frame}
@@ -729,8 +729,8 @@ For example, \texttt{syntax-case} introduced in Scheme is automatically hygienic
 \end{semiverbatim}
 \end{lstlistinglike}
 
-\texttt{syntax-parse} is a development of the \texttt{syntax-rules} family of macro transformers.
-On top of the normal capabilities of \texttt{syntax-rules} it lets the programmers define
+\texttt{syntax-parse} is a development of the \texttt{syntax-case} family of macro transformers.
+On top of the normal capabilities of \texttt{syntax-case} it lets the programmers define
 syntax specifications that improve error checking and reporting.
 
 These specifications are first-class in a sense that they can be abstracted with \texttt{define-syntax-class} and composed from the ground up.
