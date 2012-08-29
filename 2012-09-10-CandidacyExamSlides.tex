@@ -92,11 +92,11 @@ Macros are programmable code transformers
 \end{semiverbatim}
 \end{lstlistinglike}
 
-Here we declare \emph{let}, a Lisp function. Since it is declared as a macro,
+Here we declare \texttt{let}, a Lisp function. Since it is declared as a macro,
 it's automatically plugged into the Lisp evaluator.
 
 We can say that the evaluator installs a macro transformer implemented by the body of the macro
-into a slot named \emph{let}.
+into a slot named \texttt{let}.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -115,7 +115,7 @@ into a slot named \emph{let}.
 \end{semiverbatim}
 \end{lstlistinglike}
 
-When the evaluator encounters a form that is an application of \emph{let},
+When the evaluator encounters a form that is an application of \texttt{let},
 it yields control to the corresponding macro transformer,
 passing it the tail of the form.
 \end{frame}
@@ -162,7 +162,7 @@ These slides discuss the ways to represent, analyze and generate code in the sma
 \section{Challenges in macrology: notation}
 
 \begin{frame}[fragile]
-\frametitle{Revisiting \emph{let}}
+\frametitle{Revisiting \texttt{let}}
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
@@ -184,7 +184,7 @@ Without color coding it would be hard to understand the supposed structure of in
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Improving \emph{let}}
+\frametitle{Improving \texttt{let}}
 
 \setbeamercolor{alerted text}{fg=blue} % maybe fg=red?
 \begin{lstlistinglike}
@@ -256,7 +256,7 @@ MetaML is a statically typechecked language with quasiquotes. Its type system gu
 if a meta-program is well-typed then any produced object-program will be well-typed as well.
 
 Unlike in lisps, quasiquotes in MetaML cannot have unbound free variables, which effectively means
-that meta-programs cannot introduce new bindings (e.g. it's not possible to express \emph{let} as a macro).
+that meta-programs cannot introduce new bindings (e.g. it's not possible to express \texttt{let} as a macro).
 This is a sacrifice to the altar of strong type safety guarantees.
 \end{frame}
 
@@ -661,6 +661,168 @@ assigned to the current macro expansion:
 
 \section{Macros in Racket}
 
+\begin{frame}[fragile]
+\frametitle{Overview}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax (let stx)
+  (syntax-case stx ()
+    ((let ((name expr) ...) body ...)
+     #'((lambda (name ...) body ...) expr ...))))
+
+(let ((x 40) (y 2)) (print (+ x y)))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Racket is a Scheme. It inherits and develops its macro system.
+In fact all Lispy examples in these slides are Racket-based.
+
+An important tradition in Scheme community is a strive towards hygiene.
+Both Kohlbecker and Dybvig, who we quoted when studying hygiene and referential
+transparency, did their research in Scheme.
+
+For example, \texttt{syntax-case} introduced in Scheme is automatically hygienic.
+\texttt{defmacro}, which dates back to Lisp, is not.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Notation}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax (let stx)
+  (syntax-parse stx
+    ((let ((name\alert{:identifier} expr\alert{:expr}) ...) body\alert{:expr} ...)
+     \alert{#:fail-when} (check-duplicate #'(var ...))
+                  "duplicate variable name"
+     #'((lambda (name ...) body ...) expr ...))))
+
+(let ((x 40) (y 2)) (print (+ x y)))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+\texttt{syntax-parse} is a development of the \texttt{syntax-rules} family of macro transformers.
+On top of the normal capabilities of \texttt{syntax-rules} it lets the programmers define
+syntax specifications that improve error checking and reporting.
+
+These specifications are first-class in a sense that they can be abstracted with \texttt{define-syntax-class} and composed from the ground up.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Hygiene}
+
+Racket Reference promotes usage of pattern-based syntax matching with \texttt{syntax-case},
+which automatically separates lexical contexts of macro use and macro definition
+(Schemes use marks for this purpose, which were a direct inspiration for colors in Nemerle).
+
+Raw S-expressions are abstracted behind syntax objects that carry information
+about sources and positions (and, therefore, lexical contexts), modules, visibility etc.
+
+Default way of creating syntax objects is syntax quote \texttt{\#'}, which uses the lexical
+context of its call site, ensuring hygiene.
+
+In cases when it's necessary to break hygiene (i.e. to make an identifier \texttt{a} visible
+in the scope of an identifier \texttt{b}) it is conventional to use something like
+\texttt{(datum-> syntax \#'b 'a)} and then splice the return value into the macro expansion.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Revisiting \texttt{forever}}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax forever
+  (syntax-rules ()
+    ((forever body ...)
+     (call/cc (lambda (\alert{abort})
+                (let loop () body ... (loop)))))))
+
+(forever (print 4) (print 2) (\alert{abort}))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+This code from the previous discussion on hygiene will not work,
+because \texttt{syntax-*} macro transformers are hygienic by default.
+
+\texttt{abort} introduced by the macro expansion will be alpha-renamed,
+which will prevent the body of \texttt{forever} from seeing it.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Unhygienic \texttt{forever}}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax (forever stx)
+  (syntax-case stx ()
+    ((forever body ...)
+     (with-syntax ((\text{\color{blue}{abort}} (datum->syntax \text{\color{blue}{#'forever}} \text{\color{red}{'abort}})))
+       #'(call/cc (lambda (\text{\color{blue}{abort}})
+                    (let loop () body ... (loop)))))]))
+
+(\text{\color{blue}{forever}} (print 4) (print 2) (\text{\color{blue}{abort}}))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Here \texttt{datum->syntax} takes a raw S-expression \texttt{'abort} that represents the name
+we want to introduce unhygienically and creates a corresponding syntax object linked to the
+lexical context of the macro use site.
+
+When this syntax object is spliced into the template, it becomes visible to the body
+of the application of \texttt{forever}.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Doesn't scale}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax while
+  (syntax-rules ()
+    ((while test body ...)
+     (\text{\color{blue}{forever}} (unless test (\text{\color{blue}{abort}})) body ...))))
+
+(while #t (\text{\color{red}{abort}})
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Unfortunately this approach doesn't scale, because it doesn't compose with other macros.
+In the example above, \texttt{abort} in the body of \texttt{while} is in a lexical context
+different from \texttt{forever} and will not see \texttt{abort}.
+
+One of the solutions would be to bind \texttt{abort} in the body of \texttt{while} bringing it to the
+requried context. Another one implies passing \texttt{abort} explicitly when calling \texttt{while} and
+derived macros. In both cases, however, each macro use site imposes a boilerplate penalty.
+\end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Solution}
+
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(define-syntax-parameter abort (syntax-rules ()))
+
+(define-syntax forever
+  (syntax-rules ()
+    ((forever body ...)
+     (call/cc
+      (lambda (abort-k)
+        (syntax-parameterize
+            ((abort (syntax-rules () ((_) (abort-k)))))
+          (let loop () body ... (loop))))))))
+\end{semiverbatim}
+\end{lstlistinglike}
+
+Unlike Nemerle, Racket doesn't have polychromatic identifiers, but
+it does have dynamic variables (\texttt{fluid-let} and \texttt{fluid-syntax-let}).
+
+Here \texttt{abort} is exposed along with \texttt{forever}, so it's in the lexical scope
+of both \texttt{forever} and its usages, regardless of the intermediate macro expansions.
+This solves the visibility problem.
+\end{frame}
+
 \section{Our research}
 
 \begin{frame}[fragile]
@@ -801,6 +963,7 @@ in the compiler and implement full-fledged type reification - this can be pushed
 \item Slide about descartes
 \item Slide about an integrated prover
 \item Macros in Tex
+\item define-syntax-class
 \end{enumerate}
 \end{frame}
 
