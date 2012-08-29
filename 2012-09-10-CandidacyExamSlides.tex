@@ -446,10 +446,10 @@ since \texttt{abort} is supposed to be accessible from \texttt{body}.
 \begin{lstlistinglike}
 \begin{semiverbatim}
 (defmacro or (x y)
-  `(let ((t ,x))
+  `(\text{\color{red}{let}} ((t ,x))
      (if t t ,y)))
 
-(let ((let print))
+(let ((\text{\color{blue}{let}} print))
   (or \#f \#t))
 \end{semiverbatim}
 \end{lstlistinglike}
@@ -480,13 +480,13 @@ Syntactic Abstractions in Scheme
 
 \begin{itemize}
 \item Typical approaches to fixing the aforementioned problems
-are alpha-renaming and gensymming.
+are alpha-renaming and gensymming (generating fresh names).
 \item There are frameworks that provide hygiene and referential transparency automatically.
 Scheme is especially famous for pushing this research.
 \item These automatic frameworks usually have enough flexibility to allow for
 the use cases that require non-hygienic bindings.
 \item Some languages are doing almost fine without renaming,
-which simplifies things at a cost of an occasional non-hygienity.
+which simplifies things at a cost of occasional non-hygienity.
 \end{itemize}
 
 \end{frame}
