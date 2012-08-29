@@ -762,7 +762,7 @@ in the scope of an identifier \texttt{b}) it is conventional to use something li
 (define-syntax forever
   (syntax-rules ()
     ((forever body ...)
-     (call/cc (lambda (\alert{abort})
+     (call/cc (lambda (\text{\color{red}{abort}})
                 (let loop () body ... (loop)))))))
 
 (forever (print 4) (print 2) (\alert{abort}))
@@ -794,7 +794,7 @@ which will prevent the body of \texttt{forever} from seeing it.
 
 Here \texttt{datum->syntax} takes a raw S-expression \texttt{'abort} that represents the name
 we want to introduce unhygienically and creates a corresponding syntax object linked to the
-lexical context of the macro use site.
+lexical context of the macro use site represented by \texttt{\#'forever}.
 
 When this syntax object is spliced into the template, it becomes visible to the body
 of the application of \texttt{forever}.
@@ -808,9 +808,9 @@ of the application of \texttt{forever}.
 (define-syntax while
   (syntax-rules ()
     ((while test body ...)
-     (\text{\color{blue}{forever}} (unless test (\text{\color{blue}{abort}})) body ...))))
+     (\text{\color{red}{forever}} (unless test (\text{\color{red}{abort}})) body ...))))
 
-(while #t (\text{\color{red}{abort}})
+(while #t (\text{\color{blue}{abort}})
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -829,7 +829,7 @@ derived macros. In both cases, however, each macro use site imposes a boilerplat
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
-(define-syntax-parameter abort (syntax-rules ()))
+(define-syntax-parameter \text{\color{blue}{abort}} (syntax-rules ()))
 
 (define-syntax forever
   (syntax-rules ()
@@ -837,7 +837,7 @@ derived macros. In both cases, however, each macro use site imposes a boilerplat
      (call/cc
       (lambda (abort-k)
         (syntax-parameterize
-            ((abort (syntax-rules () ((_) (abort-k)))))
+            ((\text{\color{blue}{abort}} (syntax-rules () ((_) (abort-k)))))
           (let loop () body ... (loop))))))))
 \end{semiverbatim}
 \end{lstlistinglike}
@@ -857,8 +857,8 @@ This solves the visibility problem.
 
 \begin{lstlistinglike}
 \begin{semiverbatim}
-def assert(cond: Boolean, msg: Any) = macro m
-def m(c: Ctx)(cond: c.Expr[Boolean], msg: c.Expr[Any]) =
+def \text{\color{blue}{assert}}(cond: Boolean, msg: Any) = macro \text{\color{red}{m}}
+def \text{\color{red}{m}}(c: Ctx)(cond: c.Expr[Boolean], msg: c.Expr[Any]) =
   if (assertionsEnabled)
     // if (!cond) raise(msg)
     If(Select(cond.tree, newTermName("!")),
@@ -867,8 +867,7 @@ def m(c: Ctx)(cond: c.Expr[Boolean], msg: c.Expr[Any]) =
   else
     Literal(Constant(())
 
-import assert
-assert(2 + 2 == 4, "this can't be")
+\text{\color{blue}{assert}}(2 + 2 == 4, "this can't be")
 \end{semiverbatim}
 \end{lstlistinglike}
 
@@ -899,7 +898,7 @@ object Test extends App \{
 \end{semiverbatim}
 \end{lstlistinglike}
 
-\only<1>{Later we come up with the idea of \texttt{reify}, which turns out
+\only<1>{Later we came up with the idea of \texttt{reify}, which turns out
 (possibly parameterized) statically-typed templates of Scala code into syntax objects.
 In a sense this notion is very similar to MacroML.}
 
@@ -936,7 +935,8 @@ macro system \emph{self-cleaning}.
 \frametitle{Adoption}
 
 We dedicated a lot of time to making macros release-worthy.
-Since March they are a part of Scala's mainline, and the upcoming
+
+Since March 2012 macros are a part of Scala's mainline, and the upcoming
 release of 2.10.0 will include macros as an experimental feature.
 \end{frame}
 
@@ -954,13 +954,13 @@ release of 2.10.0 will include macros as an experimental feature.
 \begin{frame}[fragile]
 \frametitle{Future work}
 \begin{itemize}
-\item Lenient typechecking (currently arguments to macro expansions and, consequently,
+\item Lenient typing (currently arguments to macro expansions and, consequently,
 reified templates are statically typed, which has proven to be a problem when writing
 interesting macros).
 \item Synergy with the type system (implicit macros, type macros, macro annotations
 and their combinations enable some of the interesting techniques described above).
 \item Minimalizing Scala (macros have already allowed us to remove an entire phase
-in the compiler and implement full-fledged type reification - this can be pushed even further).
+and to implement full-fledged type reification - this can be pushed even further).
 \end{itemize}
 \end{frame}
 
@@ -971,7 +971,7 @@ in the compiler and implement full-fledged type reification - this can be pushed
 \begin{enumerate}
 \item Is it ok to copy/paste snippets and drawings from the papers being studied?
 \item Examples. Are they any good?
-\item Minimal volume of the write-up?
+\item Minimal size of the write-up?
 \end{enumerate}
 \end{frame}
 
