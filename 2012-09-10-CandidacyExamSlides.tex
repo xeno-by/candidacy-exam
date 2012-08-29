@@ -230,13 +230,13 @@ They temporarily cancel the effect of quasiquoting, demarcating "holes" in templ
 \setbeamercolor{alerted text}{fg=blue}
 
 This amazing notation comes from Scheme and is dubbed \emph{macro by example} (MBE).
-With the ellipsis operator it naturally captures repetitions in the input form
+Ellipsis operator naturally captures repetitions in the input form
 and translates them into the output.
 
 \texttt{syntax-rules} is a shortcut that eliminates the syntactic overhead of quasiquoting at a cost
 of supporting unquotes only for variables bound in a match. However MBE per se doesn't prevent
 arbitrary unquoting. \texttt{syntax-case}, a lower level implementation of MBE, supports all the
-functionality provided by quasiquotes.
+functionality provided by quasiquotes (we'll study it later).
 \end{frame}
 
 \begin{frame}[fragile]
@@ -252,12 +252,18 @@ val w = <(fn a => (fn b => a \%+ b))> : <int -> int -> int>
 \end{semiverbatim}
 \end{lstlistinglike}
 
-MetaML is a statically typechecked language with quasiquotes. Its type system guarantees that
-if a meta-program is well-typed then any produced object-program will be well-typed as well.
+MetaML is a statically typechecked staged language. Here \texttt{<a>} means
+"code that evaluates to a value of type \texttt{a}". For example, \texttt{w}
+is a quasiquote that represents a function from two ints to an int.
+All quasiquotes in MetaML are typechecked like that.
 
-Unlike in lisps, quasiquotes in MetaML cannot have unbound free variables, which effectively means
-that meta-programs cannot introduce new bindings (e.g. it's not possible to express \texttt{let} as a macro).
-This is a sacrifice to the altar of strong type safety guarantees.
+Therefore, unlike in Lisps, quasiquotes in MetaML cannot have unbound free variables,
+which implies that meta-programs cannot modify bindings
+(e.g. in MetaML it's impossible to express \texttt{let} as a macro).
+
+This design decision was probably motivated by the fact that MetaML isn't about macros,
+but is about staging. Quasiquotes are expanded at runtime, which is too late to check
+the consistency of bindings.
 \end{frame}
 
 \begin{frame}[fragile]
@@ -299,9 +305,10 @@ using(db, Database("localhost"), db.LoadData())
 Nemerle allows quasiquotes to contain free variables, it even permits
 splicing into binding positions (like in \texttt{def \$name = \$expr}).
 
-This makes it impossible to typecheck quasiquotes at their declaration site,
-but the results of macro expansions that use such quasiquotes are typechecked anyways,
-so errors are still caught at compile-time.
+This makes it impossible to typecheck quasiquotes in place,
+but macro expansions are typechecked anyways,
+so errors are caught at compile-time
+(the luxury that a staged language like MetaML doesn't have).
 
 Relaxed typechecking rules like in Nemerle have proven to be essential
 for a practical metaprogramming system.
