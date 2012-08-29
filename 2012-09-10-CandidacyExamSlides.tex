@@ -146,35 +146,17 @@ The value of the new form is returned as the value of the original form.
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Use cases}
-
-\begin{itemize}
-\item Deeply embedded DSLs (database access, testing)
-\item Optimization (programmable inlining, fusion)
-\item Analysis (integrated proof-checker)
-\item Effects (effect containment and propagation)
-\end{itemize}
-
-\vskip15pt
-
-\only<2>{Actually these use cases come from our experience with macros in Scala,
-which we developed this year.
-
-All the aforementioned scenarios are either already supported by Scala macros
-or will be supported in vNext!}
-\end{frame}
-
-\begin{frame}[fragile]
 \frametitle{Setting the stage}
 
 In this talk we'll be looking into macros for compiled programming languages,
 i.e. macros as extensions to compilers.
 
-Different combinations of junction points (function applications, code annotations, custom grammar rules, etc)
-and tightness of the integration (parser, namer, typer, etc) produce different challenges.
+Combining different junction points (function applications, code annotations, custom grammar rules, etc)
+and integration capabilities (parser, namer, typer, etc) produces various interesting effects,
+but unfortunately our time is limited.
 
-Today we're going to focus on a particular challenge in macrology: tackling syntactic abstractions.
-These slides discuss the ways to represent, analyze and generate code.
+Therefore today we're going to focus on a particular challenge in macrology: tackling syntactic abstractions.
+These slides discuss the ways to represent, analyze and generate code in the small.
 \end{frame}
 
 \section{Challenges in macrology: notation}
@@ -219,7 +201,7 @@ Without color coding it would be hard to understand the supposed structure of in
 
 This snippet represents a shift towards declarativeness.
 Arguments of let are now pattern-matched in the macro signature.
-The shape of resulting form is encoded in a template.
+The shape of resulting form is encoded in the template.
 
 Backquote, the template-building operator, is called \emph{quasiquote}.
 By default code inside the quasiquote is not evaluated and is copied into the output verbatim
@@ -253,7 +235,7 @@ and translates them into the output.
 
 \texttt{syntax-rules} is a shortcut that eliminates the syntactic overhead of quasiquoting at a cost
 of supporting unquotes only for variables bound in a match. However MBE per se doesn't prevent
-arbitrary unquoting. \texttt{syntax-case}, a low-level implementation of MBE, supports all the
+arbitrary unquoting. \texttt{syntax-case}, a lower level implementation of MBE, supports all the
 functionality provided by quasiquotes.
 \end{frame}
 
@@ -270,8 +252,8 @@ val w = <(fn a => (fn b => a \%+ b))> : <int -> int -> int>
 \end{semiverbatim}
 \end{lstlistinglike}
 
-MetaML is a statically typechecked language with quasiquotes. Its typesystem guarantees that
-if a meta-program is well-typed then all possibly produced object-programs will be well-typed as well.
+MetaML is a statically typechecked language with quasiquotes. Its type system guarantees that
+if a meta-program is well-typed then any produced object-program will be well-typed as well.
 
 Unlike in lisps, quasiquotes in MetaML cannot have unbound free variables, which effectively means
 that meta-programs cannot introduce new bindings (e.g. it's not possible to express \emph{let} as a macro).
@@ -288,11 +270,11 @@ mac (let seq x = e1 in e2 end) =
 \end{semiverbatim}
 \end{lstlistinglike}
 
-MacroML is a macro system built on top of MetaML. It inherits typing discipline of its parents,
+MacroML is a macro system built on top of MetaML. It inherits the typing discipline of its parent,
 but introduces a clever way to create certain bindings without compomising type safety.
 
 In the example above \texttt{\$} stands for "delay" and \texttt{?} stands for "force". Macro \texttt{seq}
-implements (wtf does it implement?).
+implements \text{\color{red}{(wtf does it implement?)}}.
 
 To typecheck the fluent binding to \texttt{x}, MacroML tracks the name of the bindee parameter in the type
 of the body parameters such as \texttt{e}i.
@@ -318,7 +300,7 @@ Nemerle allows quasiquotes to contain free variables, it even permits
 splicing into binding positions (like in \texttt{def \$name = \$expr}).
 
 This makes it impossible to typecheck quasiquotes at their declaration site,
-but the result of macro expansion that uses such quasiquotes is typechecked anyways,
+but the results of macro expansions that use such quasiquotes are typechecked anyways,
 so errors are still caught at compile-time.
 
 Relaxed typechecking rules like in Nemerle have proven to be essential
@@ -471,7 +453,7 @@ Syntactic Abstractions in Scheme
 
 \begin{itemize}
 \item Typical approaches to fixing the aforementioned problems
-are alpha-renaming and gensymming (from \texttt{gensym}).
+are alpha-renaming and gensymming.
 \item There are frameworks that provide hygiene and referential transparency automatically.
 Scheme is especially famous for pushing this research.
 \item These automatic frameworks usually have enough flexibility to allow for
@@ -670,7 +652,7 @@ assigned to the current macro expansion:
 \begin{itemize}
 \item Use refers to the nearest preceding declaration of the matching color
 (polychromatics match any color, others only match their own)
-\item Unbound identifiers are looked up in global scope.
+\item Unbound identifiers are looked up in global scope
 \end{itemize}}
 
 \end{frame}
@@ -678,6 +660,32 @@ assigned to the current macro expansion:
 \section{Macros in Racket}
 
 \section{Our research}
+
+\begin{frame}[fragile]
+\frametitle{vCurrent}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Use cases}
+
+\begin{itemize}
+\item Deeply embedded DSLs (database access, testing)
+\item Optimization (programmable inlining, fusion)
+\item Analysis (integrated proof-checker)
+\item Effects (effect containment and propagation)
+\end{itemize}
+
+\vskip15pt
+
+\only<2>{Actually all the aforementioned scenarios are either already supported by Scala macros
+or will be supported in vNext!}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{vNext}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{frame}[fragile]
 \frametitle{Questions}
