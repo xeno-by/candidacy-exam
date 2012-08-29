@@ -516,7 +516,7 @@ gen (L s : xs) x = gen xs \alert<2>{[|} \alert<2>{\$}x \alert<3>{++} \alert<2>{\
 
 \only<1>{In Template Haskell macros don't need a special declaration form
 (unlike in Lisp, they are first-class),
-at a cost of requiring an explicit trigger for macro expansion.}
+but require an explicit trigger for macro expansion.}
 
 \only<2>{Template Haskell has the notion of quasiquoting and unquoting (called \emph{splicing}
 in authors' terms). Splicing outside quasiquotes (or an explicit call to \texttt{splice}) triggers macro expansion.}
