@@ -141,7 +141,7 @@ Problems inherent to syntactic macros can be divided into two categories:
 inadvertent variable capture and semantically invalid expansions.
 The rest of the papers dwells upon these challenges.
 
-\begin{figure*}
+\begin{figure*}[t]
 \begin{listing}
 \normalsize
 
@@ -228,59 +228,7 @@ e) Macro-by-example notation augmented with a syntax specification \cite{culpepp
 % \end{center}
 \end{figure*}
 
-\section{Examples}
-
-\texttt{let} is a language construct typical to functional programming. It introduces
-a scope for a computation and brings temporary variables with provided values into that scope.
-To implement \texttt{let} the compiler might wrap the computation in a lambda abstraction
-and apply it right away (Figure 1a).
-
-This notion cannot be abstracted procedurally, because the body of the computation typically
-contains free variables. However textual abstraction fits the bill, because macros can manipulate
-the program on a level where bindings don't exist and therefore don't impose restrictions.
-To set up a stage for further chapters, let's implement the \texttt{let} macro in Lisp.
-
-The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
-It takes an S-expression that represents a macro application, destructures it using standard
-list manipulation functions, such as \texttt{car} and \texttt{cdr}, and creates a new S-expression
-with \texttt{cons}. Even in this simple example this notation is very noisy. It's quite difficult
-to figure out expected shapes of input and output expressions from the imperative algorithm.
-
-Quasiquotes \cite{bawden99} make it possible to reduce obscurity of the macro by providing
-a domain-specific language for syntax templates (Figure 1c). The quasiquote operator (\texttt{`})
-demarcates a static template. Quasiquoted code is inserted verbatim into the output
-(that's why there's no longer need in explicit \texttt{cons}'ing). Unquote operators (\texttt{,}
-and \texttt{,@}) interrupt a quasiquote, producing "holes" filled in with dynamically calculated
-data. For example, for \texttt{let} we statically know the shape of code to produce (an application
-of a lambda abstraction) - this makes up the static part of the quasiquote. On the other hand,
-body and parameters of the lambda as well as the arguments of the application may vary from
-expansion to expansion - this is the dynamic part.
-
-Another simplification of the macro can be achieved with MBE, the macro-by-example notation
-\cite{kohlbecker87}. In their seminal work Kohlbecker and Wand came up with a specification
-of a pattern matcher that matches singular and repetitive parts of S-expressions.
-Identifiers which appear in the input pattern are treated as pattern variables,
-ellipses (\texttt{...}) used as a last element of a list that contains pattern variables
-denote repetition and, when nested, can capture lists of arbitrary depth.
-The revised version of the \texttt{let} macro is particularly minimalistic (Figure 1d).
-
-A recent development of the MBE syntax has been proposed by Culpepper and Felleisen \cite{culpepper10}.
-Their refinement addresses the need for principled input validation and error reporting. Indeed,
-MBE covers the success path, but doesn't help with detecting errors. For example,
-duplicate identifier names as in \texttt{(let ((x 40) (x 2)) (print (+ x y))} will go
-unnoticed until the compiler gets to the resulting lambda form, which will produce
-confusing error messages. Authors enhance MBE with both declarative and procedural
-means of validation (Figure 1e). Colons next to the names of pattern variables denote syntax classes,
-which put restrictions on the shape of the variables, \texttt{\#:fail-when} clauses can contain
-validation code and error messages (this doesn't cover all the capabilities of syntax specifications,
-please, refer to \cite{culpepper10} for details). These validation facilities can be packed
-into custom syntax classes, which can be built from the ground up.
-
-\newpage
-
-\section{Bindings}
-
-\begin{figure*}
+\begin{figure*}[t]
 \begin{listing}
 \normalsize
 
@@ -348,13 +296,63 @@ comes from the macro use site.
 \end{figure*}
 
 \begin{figure*}
-\hskip6.35cm
-\normalsize Figure 2. Inadvertent variable capture
+\hskip5.05cm
+\normalsize Figure 2. Intentional and unintentional variable capture
 % saves an empty line
 % \begin{center}
-% \normalsize Figure 2. Inadvertent variable capture
+% \normalsize Figure 2. Intentional and unintentional variable capture
 % \end{center}
 \end{figure*}
+
+\section{Examples}
+
+\texttt{let} is a language construct typical to functional programming. It introduces
+a scope for a computation and brings temporary variables with provided values into that scope.
+To implement \texttt{let} the compiler might wrap the computation in a lambda abstraction
+and apply it right away (Figure 1a).
+
+This notion cannot be abstracted procedurally, because the body of the computation typically
+contains free variables. However textual abstraction fits the bill, because macros can manipulate
+the program on a level where bindings don't exist and therefore don't impose restrictions.
+To set up a stage for further chapters, let's implement the \texttt{let} macro in Lisp.
+
+The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
+It takes an S-expression that represents a macro application, destructures it using standard
+list manipulation functions, such as \texttt{car} and \texttt{cdr}, and creates a new S-expression
+with \texttt{cons}. Even in this simple example this notation is very noisy. It's quite difficult
+to figure out expected shapes of input and output expressions from the imperative algorithm.
+
+Quasiquotes \cite{bawden99} make it possible to reduce obscurity of the macro by providing
+a domain-specific language for syntax templates (Figure 1c). The quasiquote operator (\texttt{`})
+demarcates a static template. Quasiquoted code is inserted verbatim into the output
+(that's why there's no longer need in explicit \texttt{cons}'ing). Unquote operators (\texttt{,}
+and \texttt{,@}) interrupt a quasiquote, producing "holes" filled in with dynamically calculated
+data. For example, for \texttt{let} we statically know the shape of code to produce (an application
+of a lambda abstraction) - this makes up the static part of the quasiquote. On the other hand,
+body and parameters of the lambda as well as the arguments of the application may vary from
+expansion to expansion - this is the dynamic part.
+
+Another simplification of the macro can be achieved with MBE, the macro-by-example notation
+\cite{kohlbecker87}. In their seminal work Kohlbecker and Wand came up with a specification
+of a pattern matcher that matches singular and repetitive parts of S-expressions.
+Identifiers which appear in the input pattern are treated as pattern variables,
+ellipses (\texttt{...}) used as a last element of a list that contains pattern variables
+denote repetition and, when nested, can capture lists of arbitrary depth.
+The revised version of the \texttt{let} macro is particularly minimalistic (Figure 1d).
+
+A recent development of the MBE syntax has been proposed by Culpepper and Felleisen \cite{culpepper10}.
+Their refinement addresses the need for principled input validation and error reporting. Indeed,
+MBE covers the success path, but doesn't help with detecting errors. For example,
+duplicate identifier names as in \texttt{(let ((x 40) (x 2)) (print (+ x y))} will go
+unnoticed until the compiler gets to the resulting lambda form, which will produce
+confusing error messages. Authors enhance MBE with both declarative and procedural
+means of validation (Figure 1e). Colons next to the names of pattern variables denote syntax classes,
+which put restrictions on the shape of the variables, \texttt{\#:fail-when} clauses can contain
+validation code and error messages (this doesn't cover all the capabilities of syntax specifications,
+please, refer to \cite{culpepper10} for details). These validation facilities can be packed
+into custom syntax classes, which can be built from the ground up.
+
+\section{Bindings}
 
 \begin{thebibliography}{1}
 
