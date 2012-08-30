@@ -276,6 +276,63 @@ validation code and error messages (this doesn't cover all the capabilities of s
 please, refer to \cite{culpepper10} for details). These validation facilities can be packed
 into custom syntax classes, which can be built from the ground up.
 
+\section{Bindings}
+
+\begin{figure*}
+\begin{listing}
+\normalsize
+
+\begin{tabular}{p{5.4cm} p{15cm}}\\
+ &
+\begin{verbatim}
+(defmacro or (x y)
+  '(let ((temp ,x))
+    (if temp temp ,y)))
+
+(or 42 "the result is 42")
+\end{verbatim}
+\end{tabular}
+
+\begin{center}
+a) A simple yet erroneous implementation of the \texttt{or} macro
+\end{center}
+
+\begin{tabular}{p{8.5cm} p{8.5cm}}\\
+\begin{verbatim}
+(let ((temp "451 Fahrenheit"))
+  (or null temp))
+
+(let ((temp "451 Fahrenheit"))
+  (let ((temp null))
+    (if temp temp temp)))
+\end{verbatim}
+&
+\begin{verbatim}
+(let ((let print))
+  (or true false))
+
+(let ((let print))
+  (let ((temp true))
+    (if temp temp false)))
+\end{verbatim}\\
+b) Violation of hygiene \cite{kohlbecker86}: variable created during macro expansion
+shadows binding established at the expansion site
+&
+c) Violation of referential transparency \cite{dybvig92}: variable used in macro expansion
+changes its meaning at the macro use site
+\end{tabular}
+\end{listing}
+\end{figure*}
+
+\begin{figure*}
+\hskip6.35cm
+\normalsize Figure 2. Inadvertent variable capture
+% saves an empty line
+% \begin{center}
+% \normalsize Figure 2. Inadvertent variable capture
+% \end{center}
+\end{figure*}
+
 \begin{thebibliography}{1}
 
 \bibitem{sheard02}
@@ -302,6 +359,11 @@ Artima, 2010.
 E.~Kohlbecker,
 Syntactic Extensions in the Programming Language Lisp.
 PhD thesis, Indiana University, 1986.
+
+\bibitem{dybvig92}
+R.~Dybvig, R.~Hieb and  C.~Bruggeman,
+Syntactic Abstraction in Scheme.
+Lisp and Symbolic Computations, 1992.
 
 \bibitem{bawden99}
 A.~Bawden,
