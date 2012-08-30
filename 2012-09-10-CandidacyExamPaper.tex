@@ -171,10 +171,10 @@ a) Examples of a macro application and a macro expansion of the \texttt{let} mac
 \begin{verbatim}
 (defmacro let (decls body)
  `(
-    (lambda
-      ,(map car decls)
-      ,body)
-    ,@(map cadr decls)))
+   (lambda
+     ,(map car decls)   ;; (x y)
+     ,body)             ;; (print (+ x y))
+   ,@(map cadr decls))) ;; (40 2)
 \end{verbatim}\\
 b) Creates the result at low level (manipulates S-expressions
 with standard symbol and list processing functions)
@@ -230,15 +230,15 @@ e) Macro-by-example notation augmented with a syntax specification \cite{culpepp
 
 \section{Examples}
 
-\texttt{let} is a language construct typical to functional languages, which introduces
+\texttt{let} is a language construct typical to functional programming. It introduces
 a scope for a computation and brings temporary variables with provided values into that scope.
 To implement \texttt{let} the compiler might wrap the computation in a lambda abstraction
 and apply it right away (Figure 1a).
 
 This notion cannot be abstracted procedurally, because the body of the computation typically
 contains free variables. However textual abstraction fits the bill, because macros can manipulate
-the program on a level, where bindings don't exist and therefore don't impose restrictions.
-To set up a stage for further discussion, let's implement the \texttt{let} macro in Lisp.
+the program on a level where bindings don't exist and therefore don't impose restrictions.
+To set up a stage for further chapters, let's implement the \texttt{let} macro in Lisp.
 
 The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
 It takes an S-expression that represents a macro application, destructures it using standard
@@ -255,6 +255,26 @@ data. For example, for \texttt{let} we statically know the shape of code to prod
 of a lambda abstraction) - this makes up the static part of the quasiquote. On the other hand,
 body and parameters of the lambda as well as the arguments of the application may vary from
 expansion to expansion - this is the dynamic part.
+
+Another simplification of the macro can be achieved with MBE, the macro-by-example notation
+\cite{kohlbecker87}. In their seminal work Kohlbecker and Wand came up with a specification
+of a pattern matcher that matches singular and repetitive parts of S-expressions.
+Identifiers which appear in the input pattern are treated as pattern variables,
+ellipses (\texttt{...}) used as a last element of a list that contains pattern variables
+denote repetition and, when nested, can capture lists of arbitrary depth.
+The revised version of the \texttt{let} macro is particularly minimalistic (Figure 1d).
+
+A recent development of the MBE syntax has been proposed by Culpepper and Felleisen \cite{culpepper10}.
+Their refinement addresses the need for principled input validation and error reporting. Indeed,
+MBE covers the success path, but doesn't help with detecting errors. For example,
+duplicate identifier names as in \texttt{(let ((x 40) (x 2)) (print (+ x y))} will go
+unnoticed until the compiler gets to the resulting lambda form, which will produce
+confusing error messages. Authors enhance MBE with both declarative and procedural
+means of validation (Figure 1e). Colons next to the names of pattern variables denote syntax classes,
+which put restrictions on the shape of the variables, \texttt{\#:fail-when} clauses can contain
+validation code and error messages (this doesn't cover all the capabilities of syntax specifications,
+please, refer to \cite{culpepper10} for details). These validation facilities can be packed
+into custom syntax classes, which can be built from the ground up.
 
 \begin{thebibliography}{1}
 
