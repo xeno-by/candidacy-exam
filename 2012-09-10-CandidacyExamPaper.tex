@@ -1,5 +1,11 @@
 \documentclass[10pt,journal,a4paper]{IEEEtran}
 
+\usepackage{lipsum}
+\usepackage{array}
+\usepackage{mdframed}
+\newmdenv[linewidth=0.5pt, innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=1mm, innerbottommargin=1mm, leftmargin=0mm, rightmargin=0mm]{listing}
+\usepackage{changepage}
+
 \newcommand\MYhyperrefoptions{bookmarks=true,bookmarksnumbered=true,
 pdfpagemode={UseOutlines},plainpages=false,pdfpagelabels=true,
 colorlinks=true,linkcolor={black},citecolor={black},pagecolor={black},
@@ -135,6 +141,95 @@ Problems inherent to syntactic macros can be divided into two categories:
 inadvertent variable capture and semantically invalid expansions.
 The rest of the papers dwells upon these challenges.
 
+\section{Bindings}
+
+\begin{figure*}
+\begin{listing}
+\normalsize
+
+\begin{tabular}{p{4.0cm} p{15cm}}\\
+ &
+\begin{verbatim}
+(let ((x 40) (y 2)) (print (+ x y)))
+
+((lambda (x y) (print (+ x y))) (40 2))
+\end{verbatim}
+\end{tabular}
+
+\begin{center}
+a) Examples of a macro application and a macro expansion of the \texttt{let} macro
+\end{center}
+
+\begin{tabular}{p{8.5cm} p{8.5cm}}\\
+\begin{verbatim}
+(defmacro let (decls body)
+  (cons
+    (cons 'lambda
+          (cons (map car decls)
+                body))
+    (map cadr decls)))
+\end{verbatim}
+&
+\begin{verbatim}
+(defmacro let (decls body)
+ `(
+    (lambda
+      ,(map car decls)
+      ,body)
+    ,@(map cadr decls)))
+\end{verbatim}\\
+b) Creates the result at low level (manipulates S-expressions
+with standard symbol and list processing functions)
+&
+c) Uses quasiquotes \cite{bawden99} as a templating mechanism
+(backquote introduces a static code template, commas splice dynamic values
+into the template)
+\end{tabular}
+
+\begin{tabular}{p{3.5cm} p{13.5cm}}\\
+ &
+\begin{verbatim}
+(define-syntax let
+  (syntax-rules ()
+    ((let ((name expr) ...) body ...)
+    ((lambda (name ...) body ...) expr ...))))
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{4cm}{0pt}
+d) Macro-by-example notation \cite{kohlbecker87} (uses a tree matching macro that\\
+can extract and reassemble fragments of syntax objects; ellipses cap-\\ture
+recurrent parts of the input)
+\end{adjustwidth}
+
+\begin{tabular}{p{2.5cm} p{14.5cm}}\\
+ &
+\begin{verbatim}
+(define-syntax (let stx)
+  (syntax-parse stx
+    ((let ((name:identifier expr:expr) ...) body:expr ...)
+     #:fail-when (check-duplicate #'(var ...))
+                  "duplicate variable name"
+     #'((lambda (name ...) body ...) expr ...))))
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{3.2cm}{0pt}
+e) Macro-by-example notation augmented with a syntax specification \cite{culpepper10}
+(colons \\denote syntax classes, which are first-class and can be built from the ground up).
+\end{adjustwidth}
+\end{listing}
+\end{figure*}
+
+\begin{figure*}
+\hskip3.95cm
+\normalsize Figure 1. Assorted implementations of the \texttt{let} macro in Lisp dialects
+% saves an empty line
+% \begin{center}
+% \normalsize Figure 1. Assorted implementations of the \texttt{let} macro in Lisp dialects
+% \end{center}
+\end{figure*}
+
 \begin{thebibliography}{1}
 
 \bibitem{sheard02}
@@ -145,7 +240,6 @@ ACM SIGPLAN Notices, 2002.
 \bibitem{skalski04}
 K.~Skalski, M.~Moskal and P.~Olszta,
 Meta-programming in Nemerle.
-Third International Conference on
 Generative Programming and Component Engineering, 2004.
 
 \bibitem{barzilay11}
@@ -162,6 +256,21 @@ Artima, 2010.
 E.~Kohlbecker,
 Syntactic Extensions in the Programming Language Lisp.
 PhD thesis, Indiana University, 1986.
+
+\bibitem{bawden99}
+A.~Bawden,
+Quasiquotation in Lisp,
+Partial Evaluation and SemanticBased Program Manipulation, 1999.
+
+\bibitem{kohlbecker87}
+E.~Kohlbecker, M.~Wand,
+Macro-by-Example: Deriving Syntactic Transformations from their Specifications,
+Principles of Programming Languages, 1987.
+
+\bibitem{culpepper10}
+R.~Culpepper, M.~Felleisen,
+Fortifying Macros,
+International Conference on Functional Programming, 2010.
 
 \end{thebibliography}
 
