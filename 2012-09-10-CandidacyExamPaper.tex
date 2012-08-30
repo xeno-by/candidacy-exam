@@ -276,6 +276,8 @@ validation code and error messages (this doesn't cover all the capabilities of s
 please, refer to \cite{culpepper10} for details). These validation facilities can be packed
 into custom syntax classes, which can be built from the ground up.
 
+\newpage
+
 \section{Bindings}
 
 \begin{figure*}
@@ -315,12 +317,33 @@ a) A simple yet erroneous implementation of the \texttt{or} macro
   (let ((temp true))
     (if temp temp false)))
 \end{verbatim}\\
-b) Violation of hygiene \cite{kohlbecker86}: variable created during macro expansion
-shadows binding established at the expansion site
+b) Violation of hygiene \cite{kohlbecker86}: binding established during macro expansion
+affects macro use site
 &
-c) Violation of referential transparency \cite{dybvig92}: variable used in macro expansion
-changes its meaning at the macro use site
+c) Violation of referential transparency \cite{dybvig92}: binding established during macro expansion
+is affected by macro use site
 \end{tabular}
+
+\begin{tabular}{p{3.3cm} p{15cm}}\\
+ &
+\begin{verbatim}
+(define-syntax forever
+  (syntax-rules ()
+    ((forever body ...)
+     (call/cc (lambda (abort)
+                (let loop () body ... (loop)))))))
+
+(forever (print 4) (print 2) (abort))
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{2.5cm}{0pt}
+d) Intended variable capture: infinite looping construct \texttt{forever} provides
+a predefined identifier\\ to break from the loop. \texttt{abort} is introduced during
+macro expansion, but it should be visible\\ to the body of the loop, which
+comes from the macro use site.
+\end{adjustwidth}
+
 \end{listing}
 \end{figure*}
 
