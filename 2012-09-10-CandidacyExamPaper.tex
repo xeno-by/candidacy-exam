@@ -141,8 +141,6 @@ Problems inherent to syntactic macros can be divided into two categories:
 inadvertent variable capture and semantically invalid expansions.
 The rest of the papers dwells upon these challenges.
 
-\section{Bindings}
-
 \begin{figure*}
 \begin{listing}
 \normalsize
@@ -162,12 +160,12 @@ a) Examples of a macro application and a macro expansion of the \texttt{let} mac
 
 \begin{tabular}{p{8.5cm} p{8.5cm}}\\
 \begin{verbatim}
-(defmacro let (decls body)
+(defmacro let args
   (cons
     (cons 'lambda
-          (cons (map car decls)
-                body))
-    (map cadr decls)))
+          (cons (map car (car args))
+                (cdr args)))
+    (map cadr (car args))))
 \end{verbatim}
 &
 \begin{verbatim}
@@ -229,6 +227,34 @@ e) Macro-by-example notation augmented with a syntax specification \cite{culpepp
 % \normalsize Figure 1. Assorted implementations of the \texttt{let} macro in Lisp dialects
 % \end{center}
 \end{figure*}
+
+\section{Examples}
+
+\texttt{let} is a language construct typical to functional languages, which introduces
+a scope for a computation and brings temporary variables with provided values into that scope.
+To implement \texttt{let} the compiler might wrap the computation in a lambda abstraction
+and apply it right away (Figure 1a).
+
+This notion cannot be abstracted procedurally, because the body of the computation typically
+contains free variables. However textual abstraction fits the bill, because macros can manipulate
+the program on a level, where bindings don't exist and therefore don't impose restrictions.
+To set up a stage for further discussion, let's implement the \texttt{let} macro in Lisp.
+
+The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
+It takes an S-expression that represents a macro application, destructures it using standard
+list manipulation functions, such as \texttt{car} and \texttt{cdr}, and creates a new S-expression
+with \texttt{cons}. Even in this simple example this notation is very noisy. It's quite difficult
+to figure out expected shapes of input and output expressions from the imperative algorithm.
+
+Quasiquotes \cite{bawden99} make it possible to reduce obscurity of the macro by providing
+a domain-specific language for syntax templates (Figure 1c). The quasiquote operator (\texttt{`})
+demarcates a static template. Quasiquoted code is inserted verbatim into the output
+(that's why there's no longer need in explicit \texttt{cons}'ing). Unquote operators (\texttt{,}
+and \texttt{,@}) interrupt a quasiquote, producing "holes" filled in with dynamically calculated
+data. For example, for \texttt{let} we statically know the shape of code to produce (an application
+of a lambda abstraction) - this makes up the static part of the quasiquote. On the other hand,
+body and parameters of the lambda as well as the arguments of the application may vary from
+expansion to expansion - this is the dynamic part.
 
 \begin{thebibliography}{1}
 
