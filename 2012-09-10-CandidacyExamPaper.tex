@@ -52,7 +52,7 @@ Textual abstraction consists of recognizing pieces of text
 that match a specification and replacing them according
 to a procedure.
 
-In the focus of the study are syntactic abstractions in lexically
+In the focus of the study are syntactic macros in lexically
 scoped programming languages. We identify the problems
 of \emph{hygiene} and \emph{referential transparency}
 and describe the solutions employed in Template Haskell \cite{sheard02},
@@ -74,12 +74,66 @@ metaprogramming, macros, quasiquotes, hygiene, referential transparency
 
 \section{Introduction}
 
-\IEEEPARstart{T}{his} template is not trying to suggest a specific
-style for the content of your candidacy exam/thesis proposal paper; it
-only concerns the style of the writeup itself.  This template is in LaTeX.
-We encourage you to use it for your write-up.
+% \subsection{Procedural abstraction}
 
-%% the freaking quote about the notation from Kohlbecker's thesis page 22
+\IEEEPARstart{P}{rocedural} abstraction is pervasive.
+Factoring out parameterized fragments of programs into procedures
+is a conventional best practice.
+
+Modern programming languages integrate the notion of procedures into their semantics.
+Procedures are viewed as independent programs that can communicate with the main program.
+As of such they can be manipulated as units, and big procedures can be built from the smaller ones.
+This is a powerful way to manage complexity of software systems.
+
+However procedural abstraction is sometimes not enough, because
+its manifestations are bound by language syntax and it operates within the semantics
+of the language.
+
+For example, in most programming languages it is impossible to define short-circuiting logical operators
+as procedures, because procedures are usually not in control of operational semantics.
+Another example in this vein is a C-like \texttt{for} loop, which supports
+optional prologue that introduces variables visible in its body. Procedures typically cannot abstract
+over variable bindings, so they cannot express this language construct.
+
+% \subsection{Textual abstraction}
+
+\emph{Textual abstraction} consists of recognizing pieces of text
+that match a specification and replacing them according
+to a procedure.
+Matched fragments are referred to as macro calls or macro applications, and
+procedures that transform them are dubbed macros or macro transformers.
+The process of applying macros is called macro expansion \cite{kohlbecker86}.
+
+Having means of textual abstraction in their toolbox, programmers can use a multitude of techniques,
+some of which are:
+\begin{itemize}
+\item reification (providing programs with ways to treat code as data),
+\item language virtualization (overloading/overriding semantics of the original programming language
+to enable deep embedding of DSLs),
+\item programmable optimization (application of optimizations such as inlining
+or fusion based on knowledge about the program being optimized),
+\item static verification (using reified representation of the program
+and, possibly, its contracts defined alongside the program, to verify invariants
+at compile time),
+\item algorithmic program construction (generation of code that is tedious to write with
+the abstractions supported by a programming language).
+\end{itemize}
+
+One possibility to implement a macro system is having it as a standalone tool
+operating on character streams. This gives rise to lexical macros.
+Such a design warrants simplicity of the implementation,
+but undermines robustness, because macros operating on lexical level
+have no mechanism that prevents generation of syntactically invalid programs.
+
+Another approach would be to integrate a macro expander into the compiler and
+have macros work with syntax trees, introducing \emph{syntactic macros}.
+In this model macro application is a node in the program tree,
+and macro expansion produces a new node that replaces the macro application
+without distorting the structure of the program.
+
+Problems inherent to syntactic macros can be divided into two categories:
+inadvertent variable capture and semantically invalid expansions.
+The rest of the papers dwells upon these challenges.
 
 \begin{thebibliography}{1}
 
@@ -103,6 +157,11 @@ Scheme and Functional Programming Workshop, 2011.
 M.~Odersky, L.~Spoon and B.~Venners,
 Programming in Scala 2nd Edition.
 Artima, 2010.
+
+\bibitem{kohlbecker86}
+E.~Kohlbecker,
+Syntactic Extensions in the Programming Language Lisp.
+PhD thesis, Indiana University, 1986.
 
 \end{thebibliography}
 
