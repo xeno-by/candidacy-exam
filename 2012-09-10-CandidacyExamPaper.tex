@@ -53,7 +53,7 @@ pdfkeywords={metaprogramming, macros, quasiquotes, hygiene, referential transpar
 
 \IEEEcompsoctitleabstractindextext{%
 \begin{abstract}
-Macros realize the notion of textual abstraction.
+Macros realize the notion of \emph{textual abstraction}.
 Textual abstraction consists of recognizing pieces of text
 that match a specification and replacing them according
 to a procedure.
@@ -138,8 +138,8 @@ and macro expansion produces a new node that replaces the macro application
 without distorting the structure of the program.
 
 Problems inherent to syntactic macros can be divided into two categories:
-inadvertent variable capture and semantically invalid expansions.
-The rest of the papers dwells upon these challenges.
+inadvertent variable capture and expansion into semantically invalid code.
+The rest of the paper dwells upon these challenges.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -258,21 +258,21 @@ a) A simple yet erroneous implementation of the \texttt{or} macro
 \end{verbatim}
 &
 \begin{verbatim}
-(let ((let print))
+(let ((if hijacked))
   (or true false))
 
-(let ((let print))
+(let ((if hijacked))
   (let ((temp true))
     (if temp temp false)))
 \end{verbatim}\\
-b) Violation of hygiene \cite{kohlbecker86}: binding established during macro expansion
-affects macro use site
+b) Violation of hygiene \cite{kohlbecker86}: binding established during expansion
+affects call site
 &
-c) Violation of referential transparency \cite{dybvig92}: binding established during macro expansion
-is affected by macro use site
+c) Violation of referential transparency \cite{dybvig92}: binding established during expansion
+is affected by call site
 \end{tabular}
 
-\begin{tabular}{p{3.3cm} p{15cm}}\\
+\begin{tabular}{p{2.8cm} p{15cm}}\\
  &
 \begin{verbatim}
 (define-syntax forever
@@ -286,10 +286,10 @@ is affected by macro use site
 \end{tabular}
 
 \begin{adjustwidth}{2.5cm}{0pt}
-d) Intended variable capture: infinite looping construct \texttt{forever} provides
-a predefined identifier\\ to break from the loop. \texttt{abort} is introduced during
-macro expansion, but it should be visible\\ to the body of the loop, which
-comes from the macro use site.
+d) Intentional variable capture: infinite looping construct \texttt{forever} provides
+a predefi-\\ned identifier to break from the loop. \texttt{abort} is introduced during
+macro expansion,\\ but it should be visible to the body of the loop, which
+comes from the macro call site.
 \end{adjustwidth}
 
 \end{listing}
@@ -354,7 +354,77 @@ into custom syntax classes, which can be built from the ground up.
 
 \section{Bindings}
 
-\begin{thebibliography}{1}
+Syntactic macros operate on ASTs, so they cannot produce syntactically invalid code,
+but nothing prevents such macros from making semantic errors, i.e. expanding into
+syntactically valid nonsense.
+The most blatant mistakes will result in type errors, however there's an entire class
+of oversights that might silently change the behavior of the program.
+
+When writing procedures in lexically scoped languages, programmers typically don't need to think
+about name clashes between variables declared inside procedures and at their call sites.
+Except for recursion, scopes of procedure bodies and procedure call sites are different, so
+neither variables defined inside the procedures can change the semantics at the call site, nor vice versa.
+
+In a macro-enabled language, especially in presense of quasiquotes which make
+macros look like normal procedures, this intuition becomes compromised,
+because after macro expansion the scopes of macro definition and macro call site
+are mechanically merged by the expander.
+
+Conider the \texttt{or} macro shown on Figure 2a. This macro picks one of its two arguments
+based on the truthiness of the first argument. To prevent double evaluation, the macro introduces
+a temporary variable \texttt{temp} that holds the result of evaluation of the first argument.
+The temporary variable is then tested with \texttt{if}, which selects the resulting value.
+
+As simple as this code can be, it is also incorrect.
+
+The first problem happens when the call site defines its own variable named \texttt{temp}
+and relies on it in the second argument of a call to \texttt{or} (Figure 2b). After the expansion, two
+\texttt{temp}s clash, which produces incorrect results if the first argument of the call is falsy.
+This problem is dubbed \emph{hygiene violation}, and the macro is said to introduce the temporary
+variable \emph{unhygienically}.
+
+In his thesis \cite{kohlbecker86} Kohlbecker defines the hygiene condition
+and presents a macro system that automatically prevents such naming collisions:
+\begin{quote}
+Hygiene Condition for Macro Expansion.
+
+Generated identifiers that become binding instances in the
+completely expanded program must bind only identifiers that are
+generated during the same transcription step.
+\end{quote}
+
+The second problem is in a sense dual to the first one. It happens when the call site
+redefines one of the procedures or macros used in the expansion. For example, on Figure 2c
+the call site hijacks the meaning of \texttt{if}, which destroys the original intent of the
+macro author. This is a \emph{referential opaqueness} problem.
+
+Dybvig et al. \cite{dybvig92} build on Kohlbecker's work and devise a macro expander that
+automatically avoids this class of errors:
+\begin{quote}
+Macros defined in [our] high-level specification language are
+referentially transparent in the sense that a macro-introduced
+identifier refers to the binding lexically visible where the macro
+definition appears rather than to the top-level binding or to the
+binding visible where the macro call appears.
+\end{quote}
+
+At times though it is necessary to have the scopes of macro definition and macro call site melded.
+A looping macro \texttt{forever} from Figure 2d demonstrates the need for this. Expansion of this macro
+is an infinite loop that provides a magic identifier \texttt{abort} to exit the loop.
+In this case automatic hygiene facility will do harm, making the body of the loop unable to see
+the loop control lever.
+
+Because of similar situations some programmers argue in favor of manual control over
+the scoping discipline, proposing manual (or macro-powered!) renaming of identifiers whose capture would be
+undesired \cite{hoyte08}.
+
+Another popular line of thought favors further empowerment of macro systems
+to minimize the necessity for low-level tinkering.
+In fact, one of the macro systems reviewed below provides a design pattern \cite{barzilay11}
+that solves the \texttt{abort} problem in a fully hygienic way (i.e. without introducing
+identifiers with manually provided names).
+
+\begin{thebibliography}{99}
 
 \bibitem{sheard02}
 T.~Sheard and S.~Peyton Jones,
@@ -400,6 +470,11 @@ Principles of Programming Languages, 1987.
 R.~Culpepper, M.~Felleisen,
 Fortifying Macros,
 International Conference on Functional Programming, 2010.
+
+\bibitem{hoyte08}
+D.~Hoyte,
+Let Over Lambda,
+Lulu, 2008.
 
 \end{thebibliography}
 
