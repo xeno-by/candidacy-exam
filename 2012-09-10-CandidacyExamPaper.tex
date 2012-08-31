@@ -67,12 +67,12 @@ to a procedure.
 In the focus of the study is semantics of syntactic macros in lexically
 scoped programming languages. We highlight the problems
 of \emph{hygiene} and \emph{referential transparency}
-and describe the solutions employed in Template Haskell \cite{sheard02},
-Nemerle \cite{skalski04} and Racket \cite{barzilay11}.
+and describe the solutions employed Template Haskell \cite{sheard02},
+Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}.
 
 We discuss integration of hygienic macros into statically typed languages
 and plan to improve upon state of the art by providing
-a type system for syntax templates and uncovering synergies with
+a flexible type system for syntax templates and uncovering synergies with
 high-level language features such as path-dependent types and implicits \cite{odersky10}.
 \end{abstract}
 
@@ -119,10 +119,10 @@ The process of applying macros is called macro expansion \cite{kohlbecker86}.
 Having means of textual abstraction in their toolbox, programmers can use a multitude of techniques,
 some of which are:
 \begin{itemize}
-\item reification (providing programs with ways to treat code as data),
+\item reification (providing code as data),
 \item language virtualization (overloading/overriding semantics of the original programming language
 to enable deep embedding of DSLs),
-\item programmable optimization (application of optimizations such as inlining
+\item domain-specific optimization (application of optimizations such as inlining
 or fusion based on knowledge about the program being optimized),
 \item static verification (using reified representation of the program
 and, possibly, its contracts defined alongside the program, to verify invariants
@@ -145,7 +145,8 @@ without distorting the structure of the program.
 
 A significant body of recent research in textual abstraction has been done on syntax
 extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
-This paper however focuses on semantics, i.e. on preventing macros from expanding into nonsense
+This paper however focuses on semantics of macro-enabled languages,
+i.e. on preventing macros from expanding into nonsense
 and finding synergies with existing language features.
 
 \begin{figure*}[t]
@@ -548,7 +549,7 @@ Unfortunately this means that MetaML has to give up the freedom of arbitrary man
 of syntax objects, the most important of which are destructuring and introduction of new bindings.
 (e.g. in MetaML it’s impossible to express \texttt{let} as a macro).
 
-MacroML \cite{ganz01}, a macro system built atop of MetaML,
+MacroML \cite{ganz01,taha03}, a macro system built atop of MetaML,
 provides a clever way to partially alleviate this restriction, letting
 the programmer introduce new binding constructs in a very controlled setting.
 This is achieved by having the type system track
@@ -593,6 +594,14 @@ the macro expander in Nemerle from being hygienic, but with respect to typecheck
 this brings the evolution to square one.
 
 \section{State of the art}
+
+This chapters discusses macro systems in Template Haskell \cite{sheard02},
+Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10},
+which to the best of our knowledge comprise up-to-date developments
+in the field of typechecking and hygienic expansion of hygienic macros.
+
+
+
 
 \begin{thebibliography}{99}
 
@@ -676,6 +685,11 @@ S.~Ganz, A.~Sabry, W.~Taha,
 Macros as Multi-Stage Computations: Type-Safe, Generative, Binding Macros in MacroML.
 International Conference on Functional Programming, 2001.
 
+\bibitem{taha03}
+W.~Taha and P.~Johann,
+Staged Notational Definitions.
+Generative Programming and Component Engineering, 2003.
+
 \bibitem{skalski05}
 K.~Skalski,
 Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
@@ -685,6 +699,11 @@ MsC Thesis, University of Wroc{\l}aw, 2005.
 T.~Sheard and S.~Peyton Jones,
 Notes on Template Haskell Version 2.
 Glasgow Haskell Compiler, 2003.
+
+\bibitem{flatt10}
+M.~Flatt and PLT,
+Reference: Racket,
+PLT Inc., 2010.
 
 \end{thebibliography}
 
