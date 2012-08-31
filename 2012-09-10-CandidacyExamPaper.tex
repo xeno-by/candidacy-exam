@@ -914,7 +914,7 @@ distortion of scopes and formulated the principles of hygiene and referential tr
 that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08} and automatic
 techniques \cite{kohlbecker86, clinger91b, dybvig92} that increase robustness of macros.
 Among languages studied in this paper, Template Haskell derives monadic representations
-for quasiquotes, automatically alpha-renaming introduced binders \cite{sheard01}. It is
+for quasiquotes and automatically alpha-renames introduced binders \cite{sheard01}. It is
 however incapable of breaking hygiene per programmer's request without dropping
 to a low-level notation. Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}
 use approaches descended from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
@@ -926,6 +926,26 @@ Its static typechecking discipline for quasiquotes has proven to be overly restr
 macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
 restrictive. Therefore Nemerle doesn't type check quasiquotes at all, relying on a mandatory typecheck
 after macro expansion.
+
+\section{Research proposal}
+
+We implemented a macro system for the Scala programming language \cite{burmako12}
+and integrated it into a production version of the Scala compiler.
+
+The main contribution of our work is bootstrapping of a minimalistic non-hygienic macro system
+without quasiquotes into a hygienic extension with high-level means of building syntax objects.
+
+The \small \texttt{reify} \normalsize macro that implements the bootstrapping is based on a notion
+similar to MacroML's \cite{ganz01}, which forces the programmers to resort to low-level syntax manipulations
+when untypeable templates or destructuring are involved.
+Our experience and user reports show a clear need for a full-fledged hygienic quasiquoting facility.
+Therefore we plan to resolve the issues with \small \texttt{reify} \normalsize while retaining as much
+type safety as possible.
+
+Another direction of research is integration with Scala's rich type system.
+For example, our early adopters have suggested that the combination of vanilla macros, type macros
+and path-dependent types can be used to contain and propagate effects. One more conjecture is that
+synergy between macros and implicits might grant Scala theorem-proving powers.
 
 \begin{thebibliography}{99}
 
@@ -1053,6 +1073,11 @@ International Conference on Functional Programming, 2002.
 W.~Clinger and J.~Rees,
 Macros that work.
 Principles of Programming Languages, 1991.
+
+\bibitem{burmako12}
+E.~Burmako and M.~Odersky,
+Scala Macros, a Technical Report.
+Valentin Turchin Workshop on Metacomputation, 2012.
 
 \end{thebibliography}
 
