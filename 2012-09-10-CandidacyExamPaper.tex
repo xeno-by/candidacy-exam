@@ -128,7 +128,7 @@ or fusion based on knowledge about the program being optimized),
 and, possibly, its contracts defined alongside the program, to verify invariants
 at compile time),
 \item algorithmic program construction (generation of code that is tedious to write with
-the abstractions supported by a programming language).
+supported abstractions).
 \end{itemize}
 
 One possibility to implement a macro system is having it as a standalone tool
@@ -137,15 +137,16 @@ Such a design warrants simplicity of the implementation,
 but undermines robustness, because macros operating on lexical level
 have no mechanism that prevents generation of syntactically invalid programs.
 
-Another approach would be to integrate a macro expander into the compiler and
+Alternative approach is to integrate a macro expander into the compiler and
 have macros work with syntax trees, introducing \emph{syntactic macros}.
 In this model macro application is a node in the program tree,
 and macro expansion produces a new node that replaces the macro application
 without distorting the structure of the program.
 
-A significant body of recent research has been done on mechanisms to extend language grammars\
-(\cite{allen09, erdweg11, kats10} to name only a few).
-This paper however focuses on preventing macros from expanding into invalid code.
+A significant body of recent research in textual abstraction has been done on syntax
+extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
+This paper however focuses on semantics, i.e. on preventing macros from expanding into nonsense
+and finding synergies with existing language features.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -618,6 +619,11 @@ E.~Kohlbecker,
 Syntactic Extensions in the Programming Language Lisp.
 PhD thesis, Indiana University, 1986.
 
+\bibitem{atkinson11}
+K.~Atkinson and M.~Flatt,
+Adapting Scheme-like macros to a C-like language.
+Scheme and Functional Programming, 2011.
+
 \bibitem{allen09}
 E.~Allen, R.~Culpepper, J-D.~Nielsen, J.~Rafkind and S.~Ryu,
 Growing a Syntax.
@@ -627,11 +633,6 @@ Foundations of Object-Oriented Languages, 2009.
 S.~Erdweg, T.~Rendel, C.~K\"{a}stner and K.~Ostermann,
 SugarJ: Library-based syntactic language extensibility,
 Object-Oriented Programming, Systems, Languages, and Applications, 2011.
-
-\bibitem{kats10}
-L.~C.~L.~Kats and E.~Visser.
-The Spoofax language workbench: Rules for declarative specification of languages and IDEs.
-Object-Oriented Programming, Systems, Languages, and Applications, 2010.
 
 \bibitem{dybvig92}
 R.~Dybvig, R.~Hieb and  C.~Bruggeman,
