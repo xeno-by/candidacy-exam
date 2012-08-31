@@ -68,7 +68,7 @@ In the focus of the study is semantics of syntactic macros in lexically
 scoped programming languages. We highlight the problems
 of \emph{hygiene} and \emph{referential transparency}
 and describe the solutions employed Template Haskell \cite{sheard02},
-Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}.
+Nemerle \cite{skalski04} and Racket \cite{barzilay11}.
 
 We discuss integration of hygienic macros into statically typed languages
 and plan to improve upon state of the art by providing
@@ -504,7 +504,7 @@ using(db, Database("localhost"), db.LoadData())
 \end{tabular}
 
 \begin{adjustwidth}{2.5cm}{0pt}
-c) No typechecking \cite{skalski05, skalski04}: quasiquotes are not typechecked at all until a
+c) No typechecking \cite{skalski04}: quasiquotes are not typechecked at all until a
 macro\\ that uses them expands, after which the result is typechecked as a whole. This provides\\
 maximum freedom, permitting even unquotes in binding positions
 (like in \small \texttt{def \$name}\normalsize).
@@ -598,7 +598,7 @@ in a quasiquote is rejected. This happens because the compiler cannot prove that
 the usage of this type declaration (\small \texttt{MkT x}\normalsize)
 is correct for all possible \small \texttt{t}\normalsize s.
 
-It is due to this reason that Nemerle \cite{skalski05, skalski04},
+It is due to this reason that Nemerle \cite{skalski04},
 a macro-enabled language inspired by Template Haskell,
 has ceased typechecking quasiquotes altogether. As we will see below this doesn't prevent
 the macro expander in Nemerle from being hygienic, but with respect to typechecking
@@ -607,7 +607,7 @@ this brings the evolution to square one.
 \section{Case study}
 
 This chapter discusses Template Haskell \cite{sheard02},
-Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}
+Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 in the light of hygiene and referential transparency.
 
 Syntax objects in all three presented macro systems can be manipulated
@@ -630,7 +630,7 @@ Another aspect that we will omit from consideration is the way the macro expande
 acquires and loads binary code of macros. For the record, all three reviewed languages are compiled,
 but they differ in their treatment of the situation. Template Haskell and Nemerle require separate
 compilation, whereas Racket allows joint compilation with extra precautions against cross-stage
-pollution of top-level scope \cite{flatt02}.
+pollution of top-level scope.% \cite{flatt02}.
 
 Finally, in Nemerle and Racket macros can change the syntax of the language.
 As mentioned in the introduction, syntax extensibility is a lively
@@ -912,11 +912,11 @@ the more sophisticated one is mix up of lexical scopes.
 Evolution of Lisp identified the problems that lead to
 distortion of scopes and formulated the principles of hygiene and referential transparency
 that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08} and automatic
-techniques \cite{kohlbecker86, clinger91b, dybvig92} that increase robustness of macros.
+techniques \cite{kohlbecker86, dybvig92} that increase robustness of macros.
 Among languages studied in this paper, Template Haskell derives monadic representations
 for quasiquotes and automatically alpha-renames introduced binders \cite{sheard01}. It is
 however incapable of breaking hygiene per programmer's request without dropping
-to a low-level notation. Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}
+to a low-level notation. Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 use approaches descended from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
 and mechanisms for manual control.
 
@@ -1039,25 +1039,25 @@ W.~Taha and P.~Johann,
 Staged Notational Definitions.
 Generative Programming and Component Engineering, 2003.
 
-\bibitem{skalski05}
-K.~Skalski,
-Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
-MsC Thesis, University of Wroc{\l}aw, 2005.
+% \bibitem{skalski05}
+% K.~Skalski,
+% Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
+% MsC Thesis, University of Wroc{\l}aw, 2005.
 
 \bibitem{sheard03}
 T.~Sheard and S.~Peyton Jones,
 Notes on Template Haskell Version 2.
 Glasgow Haskell Compiler, 2003.
 
-\bibitem{flatt10}
-M.~Flatt and PLT,
-Reference: Racket,
-PLT Inc., 2010.
+% \bibitem{flatt10}
+% M.~Flatt and PLT,
+% Reference: Racket,
+% PLT Inc., 2010.
 
-\bibitem{flatt02}
-M.~Flatt,
-Composable and Compilable Macros: You Want it When?
-International Conference on Functional Programming, 2002.
+% \bibitem{flatt02}
+% M.~Flatt,
+% Composable and Compilable Macros: You Want it When?
+% International Conference on Functional Programming, 2002.
 
 % \bibitem{bawden00}
 % A.~Bawden,
@@ -1069,10 +1069,10 @@ International Conference on Functional Programming, 2002.
 % Scheme with classes, mixins, and traits.
 % Asian Symposium on Programming Languages and Systems, 2006.
 
-\bibitem{clinger91b}
-W.~Clinger and J.~Rees,
-Macros that work.
-Principles of Programming Languages, 1991.
+% \bibitem{clinger91b}
+% W.~Clinger and J.~Rees,
+% Macros that work.
+% Principles of Programming Languages, 1991.
 
 \bibitem{burmako12}
 E.~Burmako and M.~Odersky,
