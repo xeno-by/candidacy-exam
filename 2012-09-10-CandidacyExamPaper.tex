@@ -375,7 +375,7 @@ based on the truthiness of the first argument. To prevent double evaluation, the
 a temporary variable \texttt{temp} that holds the result of evaluation of the first argument.
 The temporary variable is then tested with \texttt{if}, which selects the resulting value.
 
-As simple as this code can be, it is also incorrect.
+As simple as this code can be, it is also incorrect, having two potential bugs.
 
 The first problem happens when the call site defines its own variable named \texttt{temp}
 and relies on it in the second argument of a call to \texttt{or} (Figure 2b). After the expansion, two
@@ -408,7 +408,14 @@ definition appears rather than to the top-level binding or to the
 binding visible where the macro call appears.
 \end{quote}
 
-At times though it is necessary to have the scopes of macro definition and macro call site melded.
+This notion is also called \emph{cross-stage persistence} in a sense that bindings in place
+at the compilation stage are persisted into the runtime stage. When viewed in this light,
+it becomes apparent that referential transparency for macros can only work for references
+to top-level definitions. Therefore common practice is to report cross-stage references to local variables
+as errors \cite{dybvig92}.
+
+Despite the conveniency of automatic segregation of the scopes of macro definitions and macro call sites,
+at times it is necessary to have them melded.
 A looping macro \texttt{forever} from Figure 2d demonstrates the need for this. Expansion of this macro
 is an infinite loop that provides a magic identifier \texttt{abort} to exit the loop.
 In this case automatic hygiene facility will do harm, making the body of the loop unable to see
@@ -421,7 +428,7 @@ undesired \cite{clinger91,hoyte08}.
 Another popular line of thought favors further empowerment of macro systems
 to minimize the necessity for low-level tinkering.
 In fact, one of the macro systems reviewed below provides a design pattern \cite{barzilay11}
-that solves the \texttt{abort} problem in a fully hygienic way (i.e. without introducing
+that solves the \texttt{abort} challenge in a fully hygienic way (i.e. without introducing
 identifiers with manually provided names).
 
 \begin{thebibliography}{99}
