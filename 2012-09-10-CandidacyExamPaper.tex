@@ -621,7 +621,8 @@ We will also take for granted the ability of meta-programs to ask the expander
 for the information about the parts of the program that lie outside of
 a macro application current to a given expansion (the \small \texttt{reify} \normalsize family of functions
 in Template Haskell, \small \texttt{Macros.ImplicitCTX} \normalsize in Nemerle and the
-\small \texttt{syntax-local} \normalsize family of functions in Racket).
+\small \texttt{syntax-local} \normalsize family of functions in Racket) or
+for metadata of syntax objects (e.g. their types, scopes, etc).
 
 Finally, in Nemerle and Racket macros can change the syntax of the language.
 As mentioned in the introduction, syntax extensibility is a lively
@@ -716,6 +717,65 @@ every call site of a macro that introduces variables visible outside would have 
 For instance, users of the \small \texttt{forever} \normalsize macro (Figure 2d) won't be able to write
 \small \texttt{\$(forever [| abort |])}\normalsize, but will be forced to express this as
 \small \texttt{\$(forever [| \$(var "abort") |])}\normalsize.
+
+\section{Nemerle}
+
+Nemerle is a general purpose object-oriented/functional programming language.
+Macros in Nemerle are introduced with the keyword \small \texttt{macro} \normalsize
+and can use quasiquotes (\small \texttt{<[...]>}\normalsize) to pattern match
+and compose syntax objects. Expansions are triggered automatically when
+the compiler encounters a function application, and the callee is deemed to be a macro.
+Nemerle also supports macro attributes that expand when put on declarations.
+Such macros can modify the inheritance chain of classes, generate new members, etc.
+
+The macro \small \texttt{<->} \normalsize shown below swaps values of two expressions
+like in \small \texttt{x <-> arr[2]}\normalsize. In the snippet we can see how quasiquotes
+can be used to pattern match against syntax objects, extract their parts and reassemble
+producing new syntax objects.
+
+\small
+\begin{verbatim}
+def cache(e: Expr): Expr * Expr
+{
+  | <[ $obj.$mem ]> =>
+    (<[ def tmp = $obj ]>, <[ tmp.$mem ]>)
+  | <[ $tab[$idx] ]> =>
+    (<[ def (tmp1, tmp2) = ($tab, $idx) ]>,
+     <[ tmp1[tmp2] ]>)
+  | _ => (<[ () ]>, e)
+}
+
+macro @<->(e1, e2) {
+  def (cached1, safe1) = cache(e1);
+  def (cached2, safe2) = cache(e2);
+  <[
+    $cached1;
+    $cached2;
+    def tmp = $safe1;
+    $safe1 = $safe2;
+    $safe2 = tmp;
+  ]>
+}
+\end{verbatim}
+\normalsize
+
+Note that unlike Template Haskell and like Lisp, Nemerle
+doesn't require explicit nudges to trigger macro expansion
+and automatically expands function applications if the callee is deemed to be a macro.
+This simplifies macro calls at a cost of having macros as second-class citizens
+(macros cannot be passed around, because all references to a macro are immediately expanded).
+In any case, macros can call arbitrary functions, so it's only a facade (i.e. macro definitions)
+that is restricted. The internals (i.e. macro implementations) can use all the abstraction mechanisms
+provided by the language.
+
+From the example above it is apparent that quasiquotes in Nemerle
+can have unbound free variables and even allow splicing into binding positions.
+Nevertheless Nemerle is hygienic and referentially transparent (except for cross-stage
+references to local variables, which are prohibited). This is achieve with
+an algorithm of impressive simplicity and power.
+
+
+% Explain the [Hygienic] attribute
 
 \begin{thebibliography}{99}
 
