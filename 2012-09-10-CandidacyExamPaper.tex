@@ -866,7 +866,8 @@ undefined identifier" error.
 Barzilay et al. study a workaround
 that involves systematic introduction of \small \texttt{abort} \normalsize into all derived macros
 (eventually abstracting out the recurring pattern into an auxiliary macro) and another one that
-explicitly passes special identifiers between call sites. Both approaches however involve boilerplate.
+explicitly passes special identifiers between call sites. Both approaches however involve
+repeated boilerplate.
 
 It becomes apparent that to address the \small \texttt{abort} \normalsize problem elegantly,
 the macro system needs to have a mechanism of variables visible in multiple scopes.
@@ -907,24 +908,24 @@ and is easily discoverable, since it comes together with the originating macro.
 
 Macro expansions can go wrong in several ways. The simple one is introduction of type errors,
 % because of malformed syntax objects, or individually well-typed syntax objects not playing well together.
-the more sophisticated one is mix up of lexical scopes.
+the more sophisticated one is inadvertent collision of lexical scopes.
 
 Evolution of Lisp identified the problems that lead to
 distortion of scopes and formulated the principles of hygiene and referential transparency
-that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08} and automatic
-techniques \cite{kohlbecker86, dybvig92} that increase robustness of macros.
+that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08}
+and automatic \cite{kohlbecker86, dybvig92} techniques that increase robustness of macros.
 Among languages studied in this paper, Template Haskell derives monadic representations
-for quasiquotes and automatically alpha-renames introduced binders \cite{sheard01}. It is
+for quasiquotes and automatically alpha-renames introduced binders \cite{sheard02}. It is
 however incapable of breaking hygiene per programmer's request without dropping
 to a low-level notation. Nemerle \cite{skalski04} and Racket \cite{barzilay11}
-use approaches descended from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
-and mechanisms for manual control.
+use approaches derived from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
+as well as mechanisms for manual control.
 
-Type checking algorithms that catch errors in meta-programs are pioneered by MetaML
+Typechecking algorithms that catch errors in meta-programs are pioneered by MetaML
 \cite{taha99,ganz01,taha03}.
 Its static typechecking discipline for quasiquotes has proven to be overly restrictive when applied to
 macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
-restrictive. Therefore Nemerle doesn't type check quasiquotes at all, relying on a mandatory typecheck
+restrictive. Therefore Nemerle doesn't typecheck quasiquotes at all, relying on a mandatory typecheck
 after macro expansion.
 
 \section{Research proposal}
