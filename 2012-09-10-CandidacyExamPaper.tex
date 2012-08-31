@@ -508,19 +508,20 @@ maximum freedom, permitting even unquotes in binding positions (like in \texttt{
 \section{Typechecking}
 
 An important feature of macros is that macro expansion happens before the code is executed (below in
-the paper this time period is referred to as \emph{compile-time}, despite that strictly speaking interpreted
+the paper this phase is referred to as \emph{compile-time}, despite that, strictly speaking, interpreted
 languages can also support macros). Therefore macro expansions can be checked for
 absense of semantic errors (to the extent supported by the language) in an automatic fashion,
 without requiring effort from the programmer.
 
 What's even better is that there is another line of defense.
-A lot of macro generated code comes from combining quasiquotes, and quasiquotes
-are just snippets of code in target language (possibly with "holes").
-Therefore it might be a good idea to typecheck quasiquotes before using them.
+Macros operate on syntax objects, which are snippets of the code to be,
+thus it might be a good idea to typecheck the code represented by these snippets
+in advance. This amounts to extending typechecking to the before-compile-time phase
+(as in compile-time of macros themselves).
 
 One approach is to treat quasiquotes similarly to functions, requiring all free variables
 to be bound in the enclosing lexical scope and assigning quasiquotes a definitive type (Figure 3a).
-This strategy is employed by MetaML \cite{taha99}, a statically typechecked
+This strategy is used in MetaML \cite{taha99}, a statically typechecked
 programming language with special support for program generation, and MacroML \cite{ganz01},
 a macro system built atop of it.
 
@@ -555,11 +556,13 @@ macro on Figure 1).
 Therefore later research on macros focused on relaxing the typechecking discipline of MetaML
 to support program analysis.
 
-A strategy employed in Template Haskell \cite{sheard02} (Figure 3b) doesn't statically ensure
-that quasiquotes play well together. Unlike in MetaML, the type of syntax objects is non-polymorphic -
-\texttt{Expr}, not \texttt{Expr 'a}. Therefore Template Haskell cannot guarantee that meta-programs
-produce well-typed code. For example, well-typedness of a \texttt{printf} expansion is checked
-on the spot, immediately after the expansion, not ahead of time.
+Template Haskell \cite{sheard02} employs a relaxed typechecking strategy for meta-programs
+(but not for expanded programs, which are typechecked with the usual rigor of Haskell).
+
+Unlike in MetaML, the type of syntax objects is non-polymorphic - \texttt{Expr}, not \texttt{Expr a} -
+and Template Haskell doesn't try to provide up-front guarantees that meta-programs produce well-typed code.
+For example, well-typedness of the \texttt{printf} macro application (Figure 3b) is checked on the spot,
+immediately after the expansion, not ahead of time.
 
 However Template Haskell does require the bindings of variables used in quasiquotes to resolve statically.
 This is done to enforce the "static scope is absolute" design principle
@@ -571,13 +574,14 @@ to an enclosing binding for \texttt{x},
 then it is so bound, and no Template-Haskell transformation can threaten that binding.
 \end{quote}
 
-Even this lightweight typecheck has proven to impose unnecessary limitations.
+Unfortunately this lightweight typecheck has proven to impose unnecessary limitations.
 For example, the meta-program \texttt{f} from Figure 3b
-that uses another meta-program \texttt{t} to insert a type declaration in a quasiquote is rejected up front.
+that uses another meta-program \texttt{t} to insert a type declaration in a quasiquote is rejected.
 This happens because the compiler cannot prove that the usage of this type declaration (\texttt{MkT x})
-is correct for all possible \texttt{t}s, despite that it might actually be correct.
+is correct for all possible \texttt{t}s.
 
-Therefore Nemerle \cite{skalski05, skalski04}, a macro-enabled language inspired by Template Haskell,
+It is due to this reason that Nemerle \cite{skalski05, skalski04},
+a macro-enabled language inspired by Template Haskell,
 has ceased typechecking quasiquotes altogether. As we will see below this doesn't prevent
 the macro expander in Nemerle from being hygienic, but with respect to typechecking
 this brings the evolution to square one.
