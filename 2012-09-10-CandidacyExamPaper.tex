@@ -641,7 +641,8 @@ or with \small \texttt{splice} \normalsize which unquotes declarations.
 The snippet below illustrates the introduced concepts. \small \texttt{printf} \normalsize and
 \small \texttt{gen} \normalsize are functions that operate on syntax objects. In particular,
 \small \texttt{printf} \normalsize generates a lambda abstraction from a C-like string format
-specification using helper functions \small \texttt{parse} \normalsize and \small \texttt{gen}\normalsize.
+specification using helper functions \small \texttt{parse} \normalsize (whose declaration is
+not present in a snippet) and \small \texttt{gen}\normalsize.
 Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
 Haskell code (to be precise, the notation for quoted patterns, declarations and types is slightly different,
 but it doesn't make much difference in the context of this discussion):
@@ -667,8 +668,20 @@ $(printf "Error: %s on line %d") msg line
 Quasiquotes in Template Haskell are hygienic and referentially transparent. The former is achieved
 by alpha-renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
 of original names that unambiguously refer to top-level variables, even if such variables are not visible
-at macro use site. An curious fact is that Template Haskell also provides cross-stage persistence for
+at macro use site. A curious fact is that Template Haskell also provides cross-stage persistence for
 local variables that conform to the \small \texttt{Lift} \normalsize type class.
+
+A very interesting aspect of Template Haskell is its implementation of hygiene through alpha-renaming,
+an inherently stateful operation, in the pure Haskell environment.
+
+\small \texttt{Expr}\normalsize,
+the type of quasiquotes, is in fact a synonym to \small \texttt{Q Exp}\normalsize,
+a type of low-level syntactic data structures lifted into the quotation monad \small \texttt{Q}\normalsize
+that provides usual monadic operations along with \small \texttt{gensym :: String -> Q String}\normalsize,
+a fresh name generator.
+In this setting quasiquotes are mechanically translated into calls to low-level constructors wrapped in
+\small \texttt{Q} \normalsize with binders renamed using \small \texttt{gensym} \normalsize and bindees
+either following the renamed binders or persisted across stages as outlined above:
 
 \small
 \begin{verbatim}
@@ -687,18 +700,6 @@ do { x <- gensym "x"
 }
 \end{verbatim}
 \normalsize
-
-A very interesting aspect of Template Haskell is its implementation of hygiene through alpha-renaming,
-an inherently stateful operation, in the pure Haskell environment.
-
-\small \texttt{Expr}\normalsize,
-the type of quasiquotes, is in fact a synonym to \small \texttt{Q Exp}\normalsize,
-a type of low-level syntactic data structures lifted into the quotation monad \small \texttt{Q}\normalsize
-that provides usual monadic operations along with \small \texttt{gensym :: String -> Q String}\normalsize,
-a fresh name generator.
-In this setting quasiquotes are mechanically translated into calls to the constructors wrapped in
-\small \texttt{Q} \normalsize with binders renamed using \small \texttt{gensym} \normalsize and bindees
-either following the renamed binders or persisted across stages as outlined above.
 
 This approach is ingenious, but unfortunately it has limitations.
 
