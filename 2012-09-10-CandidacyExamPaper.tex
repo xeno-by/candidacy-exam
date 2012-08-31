@@ -180,8 +180,8 @@ b) Creates the result at low level (manipulates S-expressions
 with standard symbol and list processing functions)
 &
 c) Uses quasiquotes \cite{bawden99} as a templating mechanism
-(backquote introduces a static code template, commas splice dynamic values
-into the template)
+(backquote introduces a static code template, commas (also known as
+unquotes) insert dynamic values into the template)
 \end{tabular}
 
 \begin{tabular}{p{3.5cm} p{13.5cm}}\\
@@ -431,6 +431,85 @@ In fact, one of the macro systems reviewed below provides a design pattern \cite
 that solves the \texttt{abort} challenge in a fully hygienic way (i.e. without introducing
 identifiers with manually provided names).
 
+\begin{figure*}[t]
+\begin{listing}
+\normalsize
+
+\begin{tabular}{p{2.0cm} p{15cm}}\\
+ &
+\begin{verbatim}
+-| fun pow n = <fn x =>
+    ~(if n = 0 then <1> else <x * (~(pow (n - 1)) x)>)>;
+val pow = fn : int -> <int -> int>
+
+-| val cube = (pow 3);
+val cube = <(fn a => x %* x %* x %* 1)> : <int -> int>
+
+-| (run cube) 5;
+val it = 125 : int
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{2.5cm}{0pt}
+a) Strict typechecking \cite{taha99}: each quasiquote is typechecked in isolation and is assigned\\
+a "code of something" type (\texttt{<`a>} stands for code that evaluates to a value of type \texttt{`a}).\\
+This means that quasiquotes cannot contain unbound free variables, which in most cases\\
+renders the macro system \cite{ganz01} incapable of manipulating bindings.
+\end{adjustwidth}
+
+\begin{tabular}{p{2.0cm} p{15cm}}\\
+ &
+\begin{verbatim}
+[| 'a' + True |] -- rejected
+
+printf :: String -> Expr -- allowed
+$(printf "Error: %s on line %d") "urk" 341
+
+f :: Q Type -> Q [Dec] -- rejected
+f t = [d| data T = MkT $t; g (MkT x) = g+1 |]
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{2.5cm}{0pt}
+b) Relaxed typechecking \cite{sheard02}: quasiquotes are sanity checked to prevent blatant errors\\
+and are required to have their bindings established before macro expansions kick in.\\
+No additional checks are done, and all quasiquotes get the same type-agnostic \texttt{Expr} type.
+\end{adjustwidth}
+
+\begin{tabular}{p{2.0cm} p{15cm}}\\
+ &
+\begin{verbatim}
+macro using(name, expr, body) {
+  <[
+    def $name = $expr;
+    try { $body } finally { $name.Dispose() }
+  ]>
+}
+using(db, Database("localhost"), db.LoadData())
+\end{verbatim}
+\end{tabular}
+
+\begin{adjustwidth}{2.5cm}{0pt}
+c) Lenient typechecking \cite{skalski05, skalski04}: quasiquotes are not typechecked at all until a
+macro\\ that uses them expands, after which the result, which contains a mix of quasiquotes and\\
+generated code, is typechecked as a whole. This provides maximum freedom, permitting\\
+even unquotes in binding positions (like in \texttt{def \$name}).
+\end{adjustwidth}
+
+\end{listing}
+\end{figure*}
+
+\begin{figure*}
+\hskip5.48cm
+\normalsize Figure 3. Typechecking strategies for quasiquotes
+% saves an empty line
+% \begin{center}
+% \normalsize Figure 3. Typechecking strategies for quasiquotes
+% \end{center}
+\end{figure*}
+
+\section{Typechecking}
+
 \begin{thebibliography}{99}
 
 \bibitem{sheard02}
@@ -465,28 +544,43 @@ Lisp and Symbolic Computations, 1992.
 
 \bibitem{bawden99}
 A.~Bawden,
-Quasiquotation in Lisp,
-Partial Evaluation and SemanticBased Program Manipulation, 1999.
+Quasiquotation in Lisp.
+Partial Evaluation and Program Manipulation, 1999.
 
 \bibitem{kohlbecker87}
 E.~Kohlbecker, M.~Wand,
-Macro-by-Example: Deriving Syntactic Transformations from their Specifications,
+Macro-by-Example: Deriving Syntactic Transformations from their Specifications.
 Principles of Programming Languages, 1987.
 
 \bibitem{culpepper10}
 R.~Culpepper, M.~Felleisen,
-Fortifying Macros,
+Fortifying Macros.
 International Conference on Functional Programming, 2010.
 
 \bibitem{hoyte08}
 D.~Hoyte,
-Let Over Lambda,
+Let Over Lambda.
 Lulu, 2008.
 
 \bibitem{clinger91}
 W.~Clinger,
-Hygienic macros through explicit renaming,
+Hygienic macros through explicit renaming.
 ACM SIGPLAN Lisp Pointers, 1991.
+
+\bibitem{taha99}
+W.~Taha,
+Multi-Stage Programming: Its Theory and Applications.
+PhD Thesis, Oregon Graduate Institute, 1999.
+
+\bibitem{ganz01}
+S.~Ganz, A.~Sabry, W.~Taha,
+Macros as Multi-Stage Computations: Type-Safe, Generative, Binding Macros in MacroML.
+International Conference on Functional Programming, 2001.
+
+\bibitem{skalski05}
+K.~Skalski,
+Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
+MsC Thesis, University of Wroc{\l}aw, 2005.
 
 \end{thebibliography}
 
