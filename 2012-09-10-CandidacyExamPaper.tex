@@ -737,10 +737,11 @@ Such macros can modify the inheritance chain of classes, generate new members, e
 The macro \small \texttt{<->} \normalsize shown below swaps values of two expressions
 like in \small \texttt{x <-> arr[2]}\normalsize. In the snippet we can see how quasiquotes
 can be used to pattern match against syntax objects, extract their parts and reassemble
-producing new syntax objects.
+producing new syntax objects. The \small \texttt{[Hygienic]} \normalsize attribute is discussed later.
 
 \small
 \begin{verbatim}
+[Hygienic]
 def cache(e: Expr): Expr * Expr
 {
   | <[ $obj.$mem ]> =>
@@ -780,8 +781,26 @@ Nevertheless Nemerle is hygienic and referentially transparent (except for cross
 references to local variables, which are prohibited). This is achieved with
 an algorithm of impressive simplicity and power.
 
+To separate lexical scopes of macro definitions and macro call sites, Nemerle colors the
+identifiers in the program. By default each macro expansion gets a unique color, different from
+the color of normal code, that gets assigned to the binders it introduces. After the program
+is fully expanded Nemerle resolves bindings, i.e. for every bindee the compiler looks for
+a nearest preceding binder with the same color. If there's no such binder, the name is looked up
+in a global environment that corresponds to the definition site of the bindee (such environments
+are enclosed in every symbol).
 
-% Explain the [Hygienic] attribute
+An important characteristic of this algorithm is that colors are fully customizable.
+Using an API exposed by the expander it is possible to recolor individual symbols and
+entire bunches into arbitrary colors. It is also possible to share colors between macros
+to ensure that selected parts of corresponding expansions can see each other.
+Finally Nemerle supports polychromatic symbols that bind
+to the nearest definitions with the same name regardless of the color.
+
+Nemerle also provides most frequently used patterns of tweaks to bindings as the part of the core language.
+\small \texttt{\$(name:~usesite)}\normalsize introduces a symbol colored identically to the macro call site.
+\small \texttt{[Hygienic]} \normalsize attribute on a function (usually used on helper functions that can be
+called multiple times from the same macro) colors binders that come from that function is a color that
+is generated afresh every invocation.
 
 \begin{thebibliography}{99}
 
