@@ -147,8 +147,9 @@ without distorting the structure of the program.
 A significant body of recent research in textual abstraction has been done on syntax
 extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
 This paper however focuses on semantics of macro-enabled languages,
-i.e. on preventing macros from expanding into nonsense
-and finding synergies with existing language features.
+% i.e. on preventing syntactic macros from expanding into nonsense
+% and finding synergies with existing language features.
+namely on ways to prevent syntactic macros from expanding into nonsense.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -323,6 +324,7 @@ and apply it right away (Figure 1a).
 This notion cannot be abstracted procedurally, because the body of the computation typically
 contains free variables. However textual abstraction fits the bill, because macros can manipulate
 the program on a level where bindings don't exist and therefore don't impose restrictions.
+
 To set up a stage for further chapters, let's implement the \small \texttt{let} \normalsize macro in Lisp.
 
 The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
@@ -435,7 +437,7 @@ unable to see the loop control lever.
 
 Because of similar situations some programmers argue in favor of manual control over
 the scoping discipline, proposing manual (or macro-powered!) renaming of identifiers whose capture would be
-undesired \cite{clinger91,hoyte08}.
+undesired \cite{clinger91a,hoyte08}.
 
 Another popular line of thought favors further empowerment of macro systems
 to minimize the necessity for low-level tinkering.
@@ -805,8 +807,8 @@ is generated afresh every invocation.
 
 \subsection{Racket}
 
-Racket is a dynamically typed descendant of Scheme. Being a product of several decades of evolution,
-Racket uses Scheme's \small \texttt{syntax-case} \normalsize \cite{dybvig92}, a hygienic and referentially
+Racket is a dynamically typed descendant of Scheme.
+It uses Scheme's \small \texttt{syntax-case} \normalsize \cite{dybvig92}, a hygienic and referentially
 transparent macro system, augmented with syntax classes \cite{culpepper10}.
 
 To prevent inadvertent captures \small \texttt{syntax-case} \normalsize uses Dybvig's algorithm,
@@ -837,17 +839,11 @@ as a binder, making it possible for a macro argument to see an identifier in the
 \end{verbatim}
 \normalsize
 
-In \cite{barzilay11} Barzilay et al. investigate the consequences of breaking hygiene, because
+In \cite{barzilay11} Barzilay et al. investigate the consequences of breaking hygiene to introduce
+special identifiers, because
 the need for that arises quite often (e.g. to implement the ubiquitous \small \texttt{this} \normalsize
 in a class system, to internally communicate information between subsystems of a complex macro, etc).
-Authors find that the technique outlined above doesn't scale to derived macros.
-
-In the running example,
-\small \texttt{abort} \normalsize will not be automatically propagated to use sites of
-the macros that build upon \small \texttt{forever}\normalsize. As outlined below
-\small \texttt{abort} \normalsize is visible inside the implementation of \small \texttt{while}\normalsize,
-but using it in the body of \small \texttt{while} \normalsize will produce a "reference to
-undefined identifier" error:
+Authors find that the technique outlined above doesn't scale to derived macros:
 
 \small
 \begin{verbatim}
@@ -859,6 +855,13 @@ undefined identifier" error:
 (while #t (abort))
 \end{verbatim}
 \normalsize
+
+In the running example,
+\small \texttt{abort} \normalsize will not be automatically propagated to use sites of
+the macros that build upon \small \texttt{forever}\normalsize. As outlined below
+\small \texttt{abort} \normalsize is visible inside the implementation of \small \texttt{while}\normalsize,
+but using it in the body of \small \texttt{while} \normalsize will produce a "reference to
+undefined identifier" error.
 
 Barzilay et al. study a workaround
 that involves systematic introduction of \small \texttt{abort} \normalsize into all derived macros
@@ -874,7 +877,7 @@ have a tradition of dynamically scoped variables. By adapting this notion to com
 (without changes to the compiler, just by introducing a couple of macros:
 \small \texttt{define-syntax-parameter} \normalsize and \small \texttt{syntax-parameterize}\normalsize)
 authors of \cite{barzilay11} arrive at a design pattern, which doesn't impose boilerplate tax
-on both the developers and the users of derived macros.
+on both the developers and the users of derived macros:
 
 \small
 \begin{verbatim}
@@ -895,6 +898,34 @@ on both the developers and the users of derived macros.
 As an additional bonus, syntax parameters are actually more robust than polychromatic symbols,
 because the dynamic variable visible though scopes is explicitly introduced as such
 and is easily discoverable, since it comes together with the originating macro.
+
+\section{Conclusion}
+
+% Textual abstraction has proven to be a powerful design tool that can be used to implement
+% aspects-oriented programming \cite{skalski04}, design patterns \cite{skalski05},
+% classes, mixins and traits \cite{flatt06}, modules \cite{flatt10}, etc.
+
+Macro expansions can go wrong in several ways. The simple one is introduction of type errors,
+% because of malformed syntax objects, or individually well-typed syntax objects not playing well together.
+the more sophisticated one is mix up of lexical scopes.
+
+Evolution of Lisp identified the problems that lead to
+distortion of scopes and formulated the principles of hygiene and referential transparency
+that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08} and automatic
+techniques \cite{kohlbecker86, clinger91b, dybvig92} that increase robustness of macros.
+Among languages studied in this paper, Template Haskell derives monadic representations
+for quasiquotes, automatically alpha-renaming introduced binders \cite{sheard01}. It is
+however incapable of breaking hygiene per programmer's request without dropping
+to a low-level notation. Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}
+use approaches descended from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
+and mechanisms for manual control.
+
+Type checking algorithms that catch errors in meta-programs are pioneered by MetaML
+\cite{taha99,ganz01,taha03}.
+Its static typechecking discipline for quasiquotes has proven to be overly restrictive when applied to
+macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
+restrictive. Therefore Nemerle doesn't type check quasiquotes at all, relying on a mandatory typecheck
+after macro expansion.
 
 \begin{thebibliography}{99}
 
@@ -968,7 +999,7 @@ D.~Hoyte,
 Let Over Lambda.
 Lulu, 2008.
 
-\bibitem{clinger91}
+\bibitem{clinger91a}
 W.~Clinger,
 Hygienic macros through explicit renaming.
 ACM SIGPLAN Lisp Pointers, 1991.
@@ -1012,6 +1043,16 @@ International Conference on Functional Programming, 2002.
 % A.~Bawden,
 % First-class Macros Have Types.
 % Principles of Programming Languages, 2000.
+
+% \bibitem{flatt06}
+% M.~Flatt, R.~B.~Findler and M.~Felleisen,
+% Scheme with classes, mixins, and traits.
+% Asian Symposium on Programming Languages and Systems, 2006.
+
+\bibitem{clinger91b}
+W.~Clinger and J.~Rees,
+Macros that work.
+Principles of Programming Languages, 1991.
 
 \end{thebibliography}
 
