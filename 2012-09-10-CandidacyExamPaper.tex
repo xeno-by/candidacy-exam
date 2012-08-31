@@ -522,8 +522,14 @@ in advance. This amounts to extending typechecking to the before-compile-time ph
 One approach is to treat quasiquotes similarly to functions, requiring all free variables
 to be bound in the enclosing lexical scope and assigning quasiquotes a definitive type (Figure 3a).
 This strategy is used in MetaML \cite{taha99}, a statically typechecked
-programming language with special support for program generation, and MacroML \cite{ganz01},
-a macro system built atop of it.
+language with special support for program generation.
+
+All quasiquotes in MetaML are typechecked individually
+and receive one of the \texttt{<a>}
+types (which means "code that evaluates to a value of type \texttt{a}").
+For example, on Figure 3a the quasiquote in the body of \texttt{pow}
+represents a function from \texttt{int} to \texttt{int}, so it has the
+\texttt{<int -> int>} type.
 
 Programs in MetaML can generate and run programs at runtime, these programs can do the same, and so on.
 Quasiquotes here represent templates of the programs to be generated and delineate execution stages.
@@ -531,32 +537,25 @@ Due to its specific nature, MetaML requires strong guarantees from the type syst
 At runtime, if program generation fails because of an error in the meta-program,
 it's too late to report typechecking errors.
 
-All quasiquotes in MetaML are typechecked individually
-and receive one of the \texttt{<a>}
-types (which means "code that evaluates to a value of type \texttt{a}").
-For example, on Figure 3a the quasiquote in the body of \texttt{pow}
-represents a function from \texttt{int} to \texttt{int}, so it has the
-\texttt{<int -> int>} type as shows on the printout of a REPL session.
-
-Therefore, unlike in Lisps, quasiquotes in MetaML cannot have unbound
-free variables, which implies that meta-programs cannot modify bindings
+Unfortunately this means that MetaML has to give up the freedom of arbitrary manipulations
+of syntax objects, the most important of which are destructuring and introduction of new bindings.
 (e.g. in MetaML it’s impossible to express \texttt{let} as a macro).
 
-MacroML provides a clever way to partially alleviate this restriction, letting
-the programmer to manipulate bindings (e.g. to introduce new binding constructs)
-in a very controlled setting. This is achieved by having the type system track
+MacroML \cite{ganz01}, a macro system built atop of MetaML,
+provides a clever way to partially alleviate this restriction, letting
+the programmer introduce new binding constructs in a very controlled setting.
+This is achieved by having the type system track
 not only the regular environments containing declared macros and variables, but also
 a so called body parameter environment, which remembers which parts of quasiquotes
-see which variables introduced by those quasiquotes \cite{ganz01}.
+see which variables introduced by those quasiquotes.
 
 This still doesn't allow arbitrary manipulations, e.g. similarly to MetaML there is no way
-to pull apart a syntax object and reassemble using a quasiquote as a template (as done in the \texttt{let}
+to pull apart a syntax object and reassemble it using a quasiquote as a template (as done in the \texttt{let}
 macro on Figure 1).
 
-Therefore later research on macros focused on relaxing the typechecking discipline of MetaML
-to support program analysis.
+Therefore later research on macros focused on relaxing the typechecking discipline of MetaML.
 
-Template Haskell \cite{sheard02} employs a relaxed typechecking strategy for meta-programs
+Template Haskell \cite{sheard02} employs a lenient typechecking strategy for meta-programs
 (but not for expanded programs, which are typechecked with the usual rigor of Haskell).
 
 Unlike in MetaML, the type of syntax objects is non-polymorphic - \texttt{Expr}, not \texttt{Expr a} -
@@ -564,7 +563,7 @@ and Template Haskell doesn't try to provide up-front guarantees that meta-progra
 For example, well-typedness of the \texttt{printf} macro application (Figure 3b) is checked on the spot,
 immediately after the expansion, not ahead of time.
 
-However Template Haskell does require the bindings of variables used in quasiquotes to resolve statically.
+However Template Haskell does require the bindings of variables used in quasiquotes to be resolved statically.
 This is done to enforce the "static scope is absolute" design principle
 (which is a rehash of hygiene and referential transparency conditions outlined in the previous chapter)
 as stated in \cite{sheard03}:
