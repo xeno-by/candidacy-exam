@@ -112,15 +112,16 @@ over variable bindings, so they cannot express this language construct.
 \emph{Textual abstraction} consists of recognizing pieces of text
 that match a specification and replacing them according
 to a procedure.
-Matched fragments are referred to as macro calls or macro applications, and
-procedures that transform them are dubbed macros or macro transformers.
-The process of applying macros is called macro expansion \cite{kohlbecker86}.
+Matched fragments are called macro calls or macro applications, and
+procedures that transform them are dubbed macros or macro transformers \cite{kohlbecker86}
+(and in general sense these procedures can be referred to as meta-programs \cite{sheard01}).
+The process of applying macros is called macro expansion.
 
 Having means of textual abstraction in their toolbox, programmers can use a multitude of techniques,
 some of which are:
 \begin{itemize}
 \item reification (providing code as data),
-\item language virtualization (overloading/overriding semantics of the original programming language
+\item language virtualization (overloading/overriding semantics
 to enable deep embedding of DSLs),
 \item domain-specific optimization (application of optimizations such as inlining
 or fusion based on knowledge about the program being optimized),
@@ -616,6 +617,8 @@ Low-level facilities are undoubtedly useful for getting things done,
 but our intent here is to get to the bottom of abstractions
 introduced by the scrutinees.
 
+We will also take for granted the ability of meta-programs to
+
 \subsection{Template Haskell}
 
 Template Haskell is a macro-enabled extension to a statically typed functional programming language.
@@ -625,16 +628,38 @@ meta-programs and macro expansions.
 
 Macro transformers in Template Haskell are represented by regular functions that produce
 data of type \small \texttt{Expr}\normalsize. Macro expansion is triggered explicitly by
-unquoting outside quasiquotes - either with \small \texttt{\$}\normalsize, the \emph{splice} operator that unquotes expressions, or with \small \texttt{splice}\normalsize,
-another splice operator that unquotes declarations.
+unquoting outside quasiquotes - either with \small \texttt{\$} \normalsize which unquotes expressions,
+or with \small \texttt{splice} \normalsize which unquotes declarations.
 
-The snippet below illustrates the introduced concepts.
+The snippet below illustrates the introduced concepts. \small \texttt{printf} \normalsize and
+\small \texttt{gen} \normalsize are functions that operate on syntax objects. In particular,
+\small \texttt{printf} \normalsize generates a lambda abstraction from a C-like string format
+specification using helper functions \small \texttt{parse} \normalsize and \small \texttt{gen}\normalsize.
+Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
+Haskell code. See Chapter 2 of \cite{sheard02} for the full example and further explanations.
 
 \small
 \begin{verbatim}
 printf :: String -> Expr
-$(printf "Error: %s on line %d") msg line
+printf s = gen (parse s) [| "" |]
 
+gen :: [Format] -> Expr -> Expr
+gen [] x = x
+gen (D   : xs) x =
+  [| \n-> $(gen xs [| $x++show n |]) |]
+gen (S   : xs) x =
+  [| \s-> $(gen xs [| $x++s |]) |]
+gen (L s : xs) x =
+  gen xs [| $x ++ $(lift s) |]
+
+$(printf "Error: %s on line %d") msg line
+\end{verbatim}
+\normalsize
+
+\lipsum[1]
+
+\small
+\begin{verbatim}
 data T a = Tip a | Fork (T a) (T a)
 splice (genEq (reifyDecl T))
 \end{verbatim}
@@ -666,6 +691,11 @@ Artima, 2010.
 E.~Kohlbecker,
 Syntactic Extensions in the Programming Language Lisp.
 PhD thesis, Indiana University, 1986.
+
+\bibitem{sheard01}
+T.~Sheard,
+Accomplishments and Research Challenges in Meta-Programming.
+Semantics, Applications, and Implementation of Program Generation, 2001.
 
 \bibitem{atkinson11}
 K.~Atkinson and M.~Flatt,
