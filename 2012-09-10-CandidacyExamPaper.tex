@@ -617,15 +617,22 @@ Low-level facilities are undoubtedly useful for getting things done,
 but our intent here is to get to the bottom of abstractions
 introduced by the scrutinees.
 
-We will also take for granted the ability of meta-programs to
+We will also take for granted the ability of meta-programs to ask the expander
+for the information about the parts of the program that lie outside of
+a macro application current to a given expansion (the \small \texttt{reify} \normalsize family of functions
+in Template Haskell, \small \texttt{Macros.ImplicitCTX} \normalsize in Nemerle and the
+\small \texttt{syntax-local} \normalsize family of functions in Racket).
+
+Finally, in Nemerle and Racket macros can change the syntax of the language.
+As mentioned in the introduction, syntax extensibility is a lively
+research topic, but it is outside the scope of this study.
 
 \subsection{Template Haskell}
 
 Template Haskell is a macro-enabled extension to a statically typed functional programming language.
-The main contributions of this macro system are hygienic translation of quasiquotes with the use of
-a monad that encapsulates generation of fresh names and a relaxed typechecking algorithm for
-meta-programs and macro expansions.
-
+% The main contributions of this macro system are hygienic translation of quasiquotes with the use of
+% a monad that encapsulates generation of fresh names and a relaxed typechecking algorithm for
+% meta-programs and macro expansions.
 Macro transformers in Template Haskell are represented by regular functions that produce
 data of type \small \texttt{Expr}\normalsize. Macro expansion is triggered explicitly by
 unquoting outside quasiquotes - either with \small \texttt{\$} \normalsize which unquotes expressions,
@@ -636,7 +643,8 @@ The snippet below illustrates the introduced concepts. \small \texttt{printf} \n
 \small \texttt{printf} \normalsize generates a lambda abstraction from a C-like string format
 specification using helper functions \small \texttt{parse} \normalsize and \small \texttt{gen}\normalsize.
 Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
-Haskell code. See Chapter 2 of \cite{sheard02} for the full example and further explanations.
+Haskell code (to be precise, the notation for quoted patterns, declarations and types is slightly different,
+but it doesn't make much difference in the context of this discussion):
 
 \small
 \begin{verbatim}
@@ -656,14 +664,57 @@ $(printf "Error: %s on line %d") msg line
 \end{verbatim}
 \normalsize
 
-\lipsum[1]
+Quasiquotes in Template Haskell are hygienic and referentially transparent. The former is achieved
+by alpha-renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
+of original names that unambiguously refer to top-level variables, even if such variables are not visible
+at macro use site. An curious fact is that Template Haskell also provides cross-stage persistence for
+local variables that conform to the \small \texttt{Lift} \normalsize type class.
 
 \small
 \begin{verbatim}
-data T a = Tip a | Fork (T a) (T a)
-splice (genEq (reifyDecl T))
+cross2a :: Expr -> Expr -> Expr
+cross2a f g = [| \(x,y) -> ($f x, $g y) |]
+
+cross2c :: Expr -> Expr -> Expr
+cross2c f g =
+do { x <- gensym "x"
+   ; y <- gensym "y"
+   ; ft <- f
+   ; gt <- g
+   ; return (Lam [Ptup [Pvar x, Pvar y]]
+                 (Tup  [App ft (Var x)
+                       ,App gt (Var y)]))
+}
 \end{verbatim}
 \normalsize
+
+A very interesting aspect of Template Haskell is its implementation of hygiene through alpha-renaming,
+an inherently stateful operation, in the pure Haskell environment.
+
+\small \texttt{Expr}\normalsize,
+the type of quasiquotes, is in fact a synonym to \small \texttt{Q Exp}\normalsize,
+a type of low-level syntactic data structures lifted into the quotation monad \small \texttt{Q}\normalsize
+that provides usual monadic operations along with \small \texttt{gensym :: String -> Q String}\normalsize,
+a fresh name generator.
+In this setting quasiquotes are mechanically translated into calls to the constructors wrapped in
+\small \texttt{Q} \normalsize with binders renamed using \small \texttt{gensym} \normalsize and bindees
+either following the renamed binders or persisted across stages as outlined above.
+
+This approach is ingenious, but unfortunately it has limitations.
+
+First of all, in general case roles
+of identifiers in quasiquotes (binder, bound within quasiquote, bound outside) cannot be determined
+before macro expansion. For example, in \small \texttt{[|~f~\$p~=~x~+~y~|]}\normalsize,
+variables \small \texttt{x} \normalsize and \small \texttt{y} \normalsize are on the fence
+until the quasiquote is evaluated. To the contrast, the translation algorithm requires an up front decision,
+which makes splices into binding positions illegal.
+
+Secondly, there is no way to opt out of hygiene without dropping to low level.
+Even worse, since the translation algorithm effectively forbids unbound free variables in quasiquotes,
+every call site of a macro that introduces variables visible outside would have to drop to low level.
+For instance, users of the \small \texttt{forever} \normalsize macro (Figure 2d) won't be able to write
+\small \texttt{\$(forever [| abort |])}\normalsize, but will be forced to express this as
+\small \texttt{\$(forever [| \$(var "abort") |])}\normalsize.
 
 \begin{thebibliography}{99}
 
