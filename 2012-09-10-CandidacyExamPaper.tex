@@ -724,7 +724,7 @@ For instance, users of the \small \texttt{forever} \normalsize macro (Figure 2d)
 \small \texttt{\$(forever [| abort |])}\normalsize, but will be forced to express this as
 \small \texttt{\$(forever [| \$(var "abort") |])}\normalsize.
 
-\section{Nemerle}
+\subsection{Nemerle}
 
 Nemerle is a general purpose object-oriented/functional programming language.
 Macros in Nemerle are introduced with the keyword \small \texttt{macro} \normalsize
@@ -803,7 +803,7 @@ Nemerle also provides most frequently used patterns of tweaks to bindings as the
 called multiple times from the same macro) colors binders that come from that function is a color that
 is generated afresh every invocation.
 
-\section{Racket}
+\subsection{Racket}
 
 Racket is a dynamically typed descendant of Scheme. Being a product of several decades of evolution,
 Racket uses Scheme's \small \texttt{syntax-case} \normalsize \cite{dybvig92}, a hygienic and referentially
@@ -836,6 +836,65 @@ as a binder, making it possible for a macro argument to see an identifier in the
 (forever (print 4) (print 2) (abort))
 \end{verbatim}
 \normalsize
+
+In \cite{barzilay11} Barzilay et al. investigate the consequences of breaking hygiene, because
+the need for that arises quite often (e.g. to implement the ubiquitous \small \texttt{this} \normalsize
+in a class system, to internally communicate information between subsystems of a complex macro, etc).
+Authors find that the technique outlined above doesn't scale to derived macros.
+
+In the running example,
+\small \texttt{abort} \normalsize will not be automatically propagated to use sites of
+the macros that build upon \small \texttt{forever}\normalsize. As outlined below
+\small \texttt{abort} \normalsize is visible inside the implementation of \small \texttt{while}\normalsize,
+but using it in the body of \small \texttt{while} \normalsize will produce a "reference to
+undefined identifier" error:
+
+\small
+\begin{verbatim}
+(define-syntax while
+  (syntax-rules ()
+    ((while test body ...)
+     (forever (unless test (abort)) body ...))))
+
+(while #t (abort))
+\end{verbatim}
+\normalsize
+
+Barzilay et al. study a workaround
+that involves systematic introduction of \small \texttt{abort} \normalsize into all derived macros
+(eventually abstracting out the recurring pattern into an auxiliary macro) and another one that
+explicitly passes special identifiers between call sites. Both approaches however involve boilerplate.
+
+It becomes apparent that to address the \small \texttt{abort} \normalsize problem elegantly,
+the macro system needs to have a mechanism of variables visible in multiple scopes.
+
+Racket lacks the notion
+of Nemerle's polychromatic symbols that bind to whatever is in any scope nearby, but all Lisps
+have a tradition of dynamically scoped variables. By adapting this notion to compile-time
+(without changes to the compiler, just by introducing a couple of macros:
+\small \texttt{define-syntax-parameter} \normalsize and \small \texttt{syntax-parameterize}\normalsize)
+authors of \cite{barzilay11} arrive at a design pattern, which doesn't impose boilerplate tax
+on both the developers and the users of derived macros.
+
+\small
+\begin{verbatim}
+(define-syntax-parameter
+  abort (syntax-rules ()))
+
+(define-syntax forever
+  (syntax-rules ()
+    ((forever body ...)
+     (call/cc (lambda (abort-k)
+        (syntax-parameterize
+          ((abort
+            (syntax-rules () ((_) (abort-k)))))
+         (let loop () body ... (loop))))))))
+\end{verbatim}
+\normalsize
+
+As an additional bonus, syntax parameters are actually more robust than polychromatic symbols,
+because the dynamic variable visible though scopes is explicitly introduced as such
+and is easily discoverable, since it comes together with the originating macro.
 
 \begin{thebibliography}{99}
 
