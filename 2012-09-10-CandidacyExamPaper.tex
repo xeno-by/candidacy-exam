@@ -5,6 +5,11 @@
 \usepackage{mdframed}
 \newmdenv[linewidth=0.5pt, innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=1mm, innerbottommargin=1mm, leftmargin=0mm, rightmargin=0mm]{listing}
 \usepackage{changepage}
+\usepackage[noadjust, sort, nocompress]{cite}
+\renewcommand\citeform[1]{#1}
+\renewcommand\citeleft{[}
+\renewcommand\citeright{]}
+\renewcommand\citepunct{,}
 
 \newcommand\MYhyperrefoptions{bookmarks=true,bookmarksnumbered=true,
 pdfpagemode={UseOutlines},plainpages=false,pdfpagelabels=true,
@@ -58,14 +63,14 @@ Textual abstraction consists of recognizing pieces of text
 that match a specification and replacing them according
 to a procedure.
 
-In the focus of the study are syntactic macros in lexically
-scoped programming languages. We identify the problems
+In the focus of the study is semantics of syntactic macros in lexically
+scoped programming languages. We highlight the problems
 of \emph{hygiene} and \emph{referential transparency}
 and describe the solutions employed in Template Haskell \cite{sheard02},
 Nemerle \cite{skalski04} and Racket \cite{barzilay11}.
 
 We discuss integration of hygienic macros into statically typed languages
-and propose to improve upon state of the art by providing
+and plan to improve upon state of the art by providing
 a type system for syntax templates and uncovering synergies with
 high-level language features such as path-dependent types and implicits \cite{odersky10}.
 \end{abstract}
@@ -137,9 +142,9 @@ In this model macro application is a node in the program tree,
 and macro expansion produces a new node that replaces the macro application
 without distorting the structure of the program.
 
-Problems inherent to syntactic macros can be divided into two categories:
-inadvertent variable capture and expansion into semantically invalid code.
-The rest of the paper dwells upon these challenges.
+A significant body of recent research has been done on mechanisms to extend language grammars\
+(\cite{allen09, erdweg11, kats10} to name only a few).
+This paper however focuses on preventing macros from expanding into invalid code.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -611,6 +616,21 @@ Artima, 2010.
 E.~Kohlbecker,
 Syntactic Extensions in the Programming Language Lisp.
 PhD thesis, Indiana University, 1986.
+
+\bibitem{allen09}
+E.~Allen, R.~Culpepper, J-D.~Nielsen, J.~Rafkind and S.~Ryu,
+Growing a Syntax.
+Foundations of Object-Oriented Languages, 2009.
+
+\bibitem{erdweg11}
+S.~Erdweg, T.~Rendel, C.~K\"{a}stner and K.~Ostermann,
+SugarJ: Library-based syntactic language extensibility,
+Object-Oriented Programming, Systems, Languages, and Applications, 2011.
+
+\bibitem{kats10}
+L.~C.~L.~Kats and E.~Visser.
+The Spoofax language workbench: Rules for declarative specification of languages and IDEs.
+Object-Oriented Programming, Systems, Languages, and Applications, 2010.
 
 \bibitem{dybvig92}
 R.~Dybvig, R.~Hieb and  C.~Bruggeman,
