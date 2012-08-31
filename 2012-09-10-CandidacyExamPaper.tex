@@ -624,6 +624,12 @@ in Template Haskell, \small \texttt{Macros.ImplicitCTX} \normalsize in Nemerle a
 \small \texttt{syntax-local} \normalsize family of functions in Racket) or
 for metadata of syntax objects (e.g. their types, scopes, etc).
 
+Another aspect that we will omit from consideration is the way the macro expander
+acquires and loads binary code of macros. For the record, all three reviewed languages are compiled,
+but they differ in their treatment of the situation. Template Haskell and Nemerle require separate
+compilation, whereas Racket allows joint compilation with extra precautions against cross-stage
+pollution of top-level scope \cite{flatt02}.
+
 Finally, in Nemerle and Racket macros can change the syntax of the language.
 As mentioned in the introduction, syntax extensibility is a lively
 research topic, but it is outside the scope of this study.
@@ -638,15 +644,6 @@ Macro transformers in Template Haskell are represented by regular functions that
 data of type \small \texttt{Expr}\normalsize. Macro expansion is triggered explicitly by
 unquoting outside quasiquotes - either with \small \texttt{\$} \normalsize which unquotes expressions,
 or with \small \texttt{splice} \normalsize which unquotes declarations.
-
-The snippet below illustrates the introduced concepts. \small \texttt{printf} \normalsize and
-\small \texttt{gen} \normalsize are functions that operate on syntax objects. In particular,
-\small \texttt{printf} \normalsize generates a lambda abstraction from a C-like string format
-specification using helper functions \small \texttt{parse} \normalsize (whose declaration is
-not present in a snippet) and \small \texttt{gen}\normalsize.
-Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
-Haskell code (to be precise, the notation for quoted patterns, declarations and types is slightly different,
-but it doesn't make much difference in the context of this discussion):
 
 \small
 \begin{verbatim}
@@ -665,6 +662,15 @@ gen (L s : xs) x =
 $(printf "Error: %s on line %d") msg line
 \end{verbatim}
 \normalsize
+
+The snippet above illustrates the introduced concepts. \small \texttt{printf} \normalsize and
+\small \texttt{gen} \normalsize are functions that operate on syntax objects. In particular,
+\small \texttt{printf} \normalsize generates a lambda abstraction from a C-like string format
+specification using helpers \small \texttt{parse} \normalsize (whose declaration is
+not present in a snippet) and \small \texttt{gen}\normalsize.
+Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
+Haskell code (to be precise, the notation for quoted patterns, declarations and types is slightly different,
+but it doesn't make much difference in the context of this discussion):
 
 Quasiquotes in Template Haskell are hygienic and referentially transparent. The former is achieved
 by alpha-renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
@@ -759,19 +765,19 @@ macro @<->(e1, e2) {
 \end{verbatim}
 \normalsize
 
-Note that unlike Template Haskell and like Lisp, Nemerle
-doesn't require explicit nudges to trigger macro expansion
-and automatically expands function applications if the callee is deemed to be a macro.
-This simplifies macro calls at a cost of having macros as second-class citizens
-(macros cannot be passed around, because all references to a macro are immediately expanded).
-In any case, macros can call arbitrary functions, so it's only a facade (i.e. macro definitions)
-that is restricted. The internals (i.e. macro implementations) can use all the abstraction mechanisms
-provided by the language.
+% Note that unlike Template Haskell and like Lisp, Nemerle
+% doesn't require explicit nudges to trigger macro expansion
+% and automatically expands function applications if the callee is deemed to be a macro.
+% This simplifies macro calls at a cost of having macros as second-class citizens
+% (macros cannot be passed around, because all references to a macro are immediately expanded).
+% In any case, macros can call arbitrary functions, so it's only a facade (i.e. macro definitions)
+% that is restricted. The internals (i.e. macro implementations) can use all the abstraction mechanisms
+% provided by the language, so second-class nature of macros is usually considered to be a minor inconvenience.
 
 From the example above it is apparent that quasiquotes in Nemerle
 can have unbound free variables and even allow splicing into binding positions.
 Nevertheless Nemerle is hygienic and referentially transparent (except for cross-stage
-references to local variables, which are prohibited). This is achieve with
+references to local variables, which are prohibited). This is achieved with
 an algorithm of impressive simplicity and power.
 
 
@@ -883,6 +889,16 @@ Glasgow Haskell Compiler, 2003.
 M.~Flatt and PLT,
 Reference: Racket,
 PLT Inc., 2010.
+
+\bibitem{flatt02}
+M.~Flatt,
+Composable and Compilable Macros: You Want it When?
+International Conference on Functional Programming, 2002.
+
+% \bibitem{bawden00}
+% A.~Bawden,
+% First-class Macros Have Types.
+% Principles of Programming Languages, 2000.
 
 \end{thebibliography}
 
