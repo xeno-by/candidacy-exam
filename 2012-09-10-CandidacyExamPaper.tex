@@ -606,7 +606,7 @@ this brings the evolution to square one.
 
 This chapter discusses Template Haskell \cite{sheard02},
 Nemerle \cite{skalski04,skalski05} and Racket \cite{barzilay11,flatt10}
-in the light of typechecking and hygienic expansion of macros.
+in the light of hygiene and referential transparency.
 
 Syntax objects in all three presented macro systems can be manipulated
 both at low level (using raw construction of corresponding data structure)
@@ -783,9 +783,10 @@ an algorithm of impressive simplicity and power.
 
 To separate lexical scopes of macro definitions and macro call sites, Nemerle colors the
 identifiers in the program. By default each macro expansion gets a unique color, different from
-the color of normal code, that gets assigned to the binders it introduces. After the program
+the color of normal code, that gets assigned to the symbols it introduces. After the program
 is fully expanded Nemerle resolves bindings, i.e. for every bindee the compiler looks for
-a nearest preceding binder with the same color. If there's no such binder, the name is looked up
+a nearest preceding binder with the same color, performing alpha-renaming as necessary.
+If there's no such binder, the name is looked up
 in a global environment that corresponds to the definition site of the bindee (such environments
 are enclosed in every symbol).
 
@@ -801,6 +802,40 @@ Nemerle also provides most frequently used patterns of tweaks to bindings as the
 \small \texttt{[Hygienic]} \normalsize attribute on a function (usually used on helper functions that can be
 called multiple times from the same macro) colors binders that come from that function is a color that
 is generated afresh every invocation.
+
+\section{Racket}
+
+Racket is a dynamically typed descendant of Scheme. Being a product of several decades of evolution,
+Racket uses Scheme's \small \texttt{syntax-case} \normalsize \cite{dybvig92}, a hygienic and referentially
+transparent macro system, augmented with syntax classes \cite{culpepper10}.
+
+To prevent inadvertent captures \small \texttt{syntax-case} \normalsize uses Dybvig's algorithm,
+which is similar to Nemerle's color algorithm outlined above (in fact, the causal relation is inversed -
+the algorithm in Nemerle is inspired by Dybvig's work). Racket's algorithm generates fresh marks for
+every macro expansion, assigns these symbols introduced by expansions and then uses the marks to
+resolve bindings and perform alpha-renamings if necessary.
+
+Much like in Nemerle, affiliation of symbols can be customized. The \small \texttt{datum->syntax} \normalsize
+function can be used to put an arbitrary S-expression into a lexical context of an arbitrary syntax object,
+including that of macro use site and macro definition site.
+
+The snippet below creates a non-hygienic symbol \small \texttt{abort} \normalsize in the lexical context
+of the macro use site (\small \texttt{\#'forever}\normalsize) and then introduces it in macro expansion
+as a binder, making it possible for a macro argument to see an identifier in the generated code:
+
+\small
+\begin{verbatim}
+(define-syntax (forever stx)
+  (syntax-case stx ()
+    ((forever body ...)
+     (with-syntax
+      ((abort (datum->syntax #'forever 'abort)))
+       #'(call/cc (lambda (abort)
+           (let loop () body ... (loop))))))))
+
+(forever (print 4) (print 2) (abort))
+\end{verbatim}
+\normalsize
 
 \begin{thebibliography}{99}
 
