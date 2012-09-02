@@ -329,7 +329,7 @@ the program on a level where bindings don't exist and therefore don't impose res
 
 The most straightforward implementation of \small \texttt{let} \normalsize
 is a low-level macro transformer (Figure 1b).
-It takes an S-expression that represents a macro application, destructures it using standard
+It takes an S-expression that represents a macro application, pulls it apart using standard
 list manipulation functions, such as \small \texttt{car} and \small \texttt{cdr}\normalsize,
 and creates a new S-expression with \small \texttt{cons}\normalsize.
 Even in this simple example the notation is very noisy. It's quite difficult
@@ -540,11 +540,10 @@ without requiring effort from the programmer.
 What's even better is that there is another line of defense.
 Macros operate on syntax objects, which are snippets of the code to be,
 thus it might be a good idea to typecheck the code represented by these snippets
-in advance. This amounts to extending typechecking to the before-compile-time phase
-(as in compile-time of macros themselves).
+in advance.
 
 One approach is to treat quasiquotes similarly to functions, requiring all free variables
-to be bound in the enclosing lexical scope and assigning quasiquotes a definitive type (Figure 3a).
+to be bound in the enclosing lexical scope and assigning all quasiquotes a definitive type (Figure 3a).
 This strategy is used in MetaML \cite{taha99}, a statically typechecked
 language with special support for program generation.
 
@@ -562,22 +561,22 @@ At runtime, if program generation fails because of an error in the meta-program,
 it's too late to report typechecking errors.
 
 Unfortunately this means that MetaML has to give up the freedom of arbitrary manipulations
-of syntax objects, the most important of which are destructuring and introduction of new bindings.
+of syntax objects, the most important of which are pattern matching and introduction of new bindings.
 (e.g. in MetaML it’s impossible to express \small \texttt{let} \normalsize as a macro).
 
 MacroML \cite{ganz01,taha03}, a macro system built atop of MetaML,
-provides a clever way to partially alleviate this restriction, letting
-the programmer introduce new binding constructs in a very controlled setting.
+provides a way to partially alleviate this restriction, letting
+the programmer introduce new binding constructs in a controlled setting.
 This is achieved by having the type system track
 not only the regular environments containing declared macros and variables, but also
-a so called body parameter environment, which remembers which parts of quasiquotes
+so called body parameter environments that remember which parts of quasiquotes
 see which variables introduced by those quasiquotes.
 
 This still doesn't allow arbitrary manipulations, e.g. similarly to MetaML there is no way
 to pull apart a syntax object and reassemble it using a quasiquote as a template
 (as done in the \small \texttt{let} \normalsize macro on Figure 1).
 
-Therefore later research on macros focused on relaxing the typechecking discipline of MetaML.
+Therefore later research on macros focuses on relaxing the typechecking discipline of MetaML.
 
 Template Haskell \cite{sheard02} employs a lenient typechecking strategy for meta-programs
 (but not for expanded programs, which are typechecked with the usual rigor of Haskell).
@@ -598,7 +597,7 @@ to an enclosing binding for \small \texttt{x}\normalsize,
 then it is so bound, and no Template-Haskell transformation can threaten that binding.
 \end{quote}
 
-Unfortunately this lightweight typecheck has proven to impose unnecessary limitations.
+Unfortunately even this lightweight typecheck has proven to impose unwanted limitations.
 For example, the meta-program \small \texttt{f} \normalsize from Figure 3b
 that uses another meta-program \small \texttt{t} \normalsize to insert a type declaration
 in a quasiquote is rejected. This happens because the compiler cannot prove that
@@ -636,8 +635,8 @@ for metadata of syntax objects (e.g. their types, scopes, etc).
 Another aspect that we will omit from consideration is the way the macro expander
 acquires and loads binary code of macros. For the record, all three reviewed languages are compiled,
 but they differ in their treatment of the situation. Template Haskell and Nemerle require separate
-compilation, whereas Racket allows joint compilation with extra precautions against cross-stage
-pollution of top-level scope \cite{flatt02}.
+compilation of macros and their usages, whereas Racket allows
+joint compilation with extra precautions against cross-stage pollution of top-level scope \cite{flatt02}.
 
 Finally, in Nemerle and Racket macros can change the syntax of the language.
 As mentioned in the introduction, syntax extensibility is a lively
@@ -679,7 +678,7 @@ specification using helpers \small \texttt{parse} \normalsize (whose declaration
 not present in a snippet) and \small \texttt{gen}\normalsize.
 Quasiquotes are encoded with \small \texttt{[|...|]} \normalsize brackets and can contain arbitrary
 Haskell code (to be precise, the notation for quoted patterns, declarations and types is slightly different,
-but it doesn't make much difference in the context of this discussion):
+but it doesn't make much difference in the context of this discussion).
 
 Quasiquotes in Template Haskell are hygienic and referentially transparent. The former is achieved
 by renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
@@ -692,7 +691,7 @@ an inherently stateful operation, in the pure Haskell environment.
 
 \small \texttt{Expr}\normalsize,
 the type of quasiquotes, is in fact a synonym to \small \texttt{Q Exp}\normalsize,
-a type of low-level syntactic data structures lifted into the quotation monad \small \texttt{Q}\normalsize
+a type of low-level syntactic data structures lifted into the quotation monad \small \texttt{Q} \normalsize
 that provides usual monadic operations along with \small \texttt{gensym :: String -> Q String}\normalsize,
 a fresh name generator.
 In this setting quasiquotes are mechanically translated into calls to low-level constructors wrapped in
@@ -717,14 +716,14 @@ do { x <- gensym "x"
 \end{verbatim}
 \normalsize
 
-This approach is ingenious, but unfortunately it has limitations.
+Unfortunately this approach has limitations.
 
 First of all, in general case roles
 of identifiers in quasiquotes (binder, bound within quasiquote, bound outside) cannot be determined
 before macro expansion. For example, in \small \texttt{[|~f~\$p~=~x~+~y~|]}\normalsize,
 variables \small \texttt{x} \normalsize and \small \texttt{y} \normalsize are on the fence
-until the quasiquote is evaluated. To the contrast, the translation algorithm requires an up front decision,
-which makes splices into binding positions illegal.
+until the quasiquote is evaluated. To the contrast, the translation algorithm requires an up-front decision,
+which makes splices into binding positions unsupported.
 
 Secondly, there is no way to opt out of hygiene without dropping to low level.
 Even worse, since the translation algorithm effectively forbids unbound free variables in quasiquotes,
@@ -735,7 +734,7 @@ For instance, users of the \small \texttt{forever} \normalsize macro (Figure 2d)
 
 \subsection{Nemerle}
 
-Nemerle is a general purpose object-oriented/functional programming language.
+Nemerle is an object-oriented/functional programming language.
 Macros in Nemerle are introduced with the keyword \small \texttt{macro} \normalsize
 and can use quasiquotes (\small \texttt{<[...]>}\normalsize) to pattern match
 and compose syntax objects. Expansions are triggered automatically when
@@ -745,7 +744,7 @@ Such macros can modify the inheritance chain of classes, generate new members, e
 
 The macro \small \texttt{<->} \normalsize shown below swaps values of two expressions
 like in \small \texttt{x <-> arr[2]}\normalsize. In the snippet we can see how quasiquotes
-can be used to pattern match against syntax objects, extract their parts and reassemble
+can be used to pattern match against syntax objects, extract their parts and reassemble them
 producing new syntax objects. The \small \texttt{[Hygienic]} \normalsize attribute is discussed later.
 
 \small
@@ -783,18 +782,17 @@ macro @<->(e1, e2) {
 % In any case, macros can call arbitrary functions, so it's only a facade (i.e. macro definitions)
 % that is restricted. The internals (i.e. macro implementations) can use all the abstraction mechanisms
 % provided by the language, so second-class nature of macros is usually considered to be a minor inconvenience.
-
-From the example above it is apparent that quasiquotes in Nemerle
-can have unbound free variables and even allow splicing into binding positions.
-Nevertheless Nemerle is hygienic and referentially transparent (except for cross-stage
-references to local variables, which are prohibited). This is achieved with
-an algorithm of impressive simplicity and power.
+% From the example above it is apparent that quasiquotes in Nemerle
+% can have unbound free variables and even allow unquoting into binding positions.
+% Nevertheless Nemerle is hygienic and referentially transparent (except for cross-stage
+% references to local variables, which are prohibited).
 
 To separate lexical scopes of macro definitions and macro call sites, Nemerle colors the
 identifiers in the program. By default each macro expansion gets a unique color, different from
-the color of normal code, that gets assigned to the symbols it introduces. After the program
-is fully expanded Nemerle resolves bindings, i.e. for every bindee the compiler looks for
-a nearest preceding binder with the same color, performing renaming as necessary.
+the color of normal code, and this color gets assigned to the symbols introduced by the macro expansion.
+After the program
+is fully expanded, Nemerle resolves bindings, i.e. for every bindee the compiler looks for
+a nearest preceding binder with the same color.
 If there's no such binder, the name is looked up
 in a global environment that corresponds to the definition site of the bindee (such environments
 are enclosed in every symbol).
@@ -806,26 +804,27 @@ to ensure that selected parts of corresponding expansions can see each other.
 Finally Nemerle supports polychromatic symbols that bind
 to the nearest definitions with the same name regardless of the color.
 
-Nemerle also provides most frequently used patterns of tweaks to bindings as the part of the core language.
-\small \texttt{\$(name:~usesite)}\normalsize introduces a symbol colored identically to the macro call site.
+Nemerle also provides most frequently used patterns of tweaks to bindings as a part of the core language.
+\small \texttt{\$(name:~usesite)} \normalsize introduces a symbol colored identically to the macro call site.
 \small \texttt{[Hygienic]} \normalsize attribute on a function (usually used on helper functions that can be
-called multiple times from the same macro) colors binders that come from that function is a color that
-is generated afresh every invocation.
+called multiple times from the same macro) colors binders that come from that function in a color that
+is generated afresh for every invocation.
 
 \subsection{Racket}
 
 Racket is a dynamically typed descendant of Scheme.
-It uses Scheme's \small \texttt{syntax-case} \normalsize \cite{dybvig92}, a hygienic and referentially
-transparent macro system, augmented with syntax classes \cite{culpepper10}.
+It uses Scheme's \small \texttt{syntax-case} \normalsize, a hygienic and referentially
+transparent macro system, augmented with syntax classes.
 
-To prevent inadvertent captures \small \texttt{syntax-case} \normalsize uses Dybvig's algorithm,
+To prevent inadvertent captures \small \texttt{syntax-case} \normalsize employs Dybvig's algorithm
+\cite{dybvig92},
 which is similar to Nemerle's color algorithm outlined above (in fact, the causal relation is inversed -
 the algorithm in Nemerle is inspired by Dybvig's work). Racket's algorithm generates fresh marks for
-every macro expansion, assigns these symbols introduced by expansions and then uses the marks to
+every macro expansion, assigns them to symbols introduced by expansions and then uses the marks to
 resolve bindings and perform renamings if necessary.
 
-Much like in Nemerle, affiliation of symbols can be customized. The \small \texttt{datum->syntax} \normalsize
-function can be used to put an arbitrary S-expression into a lexical context of an arbitrary syntax object,
+Much like in Nemerle, affiliation of symbols is customizable. The \small \texttt{datum->syntax} \normalsize
+function can be used to put an arbitrary S-expression into lexical context of an arbitrary syntax object,
 including that of macro use site and macro definition site.
 
 The snippet below creates a non-hygienic symbol \small \texttt{abort} \normalsize in the lexical context
@@ -865,10 +864,11 @@ Authors find that the technique outlined above doesn't scale to derived macros:
 
 In the running example,
 \small \texttt{abort} \normalsize will not be automatically propagated to use sites of
-the macros that build upon \small \texttt{forever}\normalsize. As outlined below
-\small \texttt{abort} \normalsize is visible inside the implementation of \small \texttt{while}\normalsize,
-but using it in the body of \small \texttt{while} \normalsize will produce a "reference to
-undefined identifier" error.
+the macros that build upon \small \texttt{forever}\normalsize.
+Because of \small \texttt{datum->syntax}\normalsize,
+\small \texttt{abort} \normalsize is visible inside the implementation of \small \texttt{while} \normalsize
+(which is the call site of \small \texttt{forever}\normalsize), but the hygiene condition prevents it
+from being visible outside.
 
 Barzilay et al. study a workaround
 that involves systematic introduction of \small \texttt{abort} \normalsize into all derived macros
@@ -904,8 +904,8 @@ on both the developers and the users of derived macros:
 \normalsize
 
 As an additional bonus, syntax parameters are actually more robust than polychromatic symbols,
-because the dynamic variable visible though scopes is explicitly introduced as such
-and is easily discoverable, since it comes together with the originating macro.
+because dynamic variables visible though scopes are explicitly introduced as such
+and are easily discoverable, since they are defined together with the originating macros.
 
 \section{Conclusion}
 
@@ -921,7 +921,7 @@ Evolution of Lisp identified the problems that lead to
 distortion of scopes and formulated the principles of hygiene and referential transparency
 that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08}
 and automatic \cite{kohlbecker86, dybvig92} techniques that increase robustness of macros.
-Among languages studied in this paper, Template Haskell derives monadic representations
+Among languages studied in this paper, Template Haskell uses monadic representations
 for quasiquotes and automatically renames introduced binders \cite{sheard02}. It is
 however incapable of breaking hygiene per programmer's request without dropping
 to a low-level notation. Nemerle \cite{skalski04} and Racket \cite{barzilay11}
@@ -937,7 +937,7 @@ after macro expansion.
 
 \section{Research proposal}
 
-We implemented a macro system for the Scala programming language \cite{burmako12}
+We implemented a macro system \cite{burmako12} for the Scala programming language \cite{odersky10}
 and integrated it into a production version of the Scala compiler.
 
 The main contribution of our work is bootstrapping of a minimalistic non-hygienic macro system
@@ -945,7 +945,7 @@ without quasiquotes into a hygienic extension with high-level means of building 
 
 The \small \texttt{reify} \normalsize macro that implements the bootstrapping is based on a notion
 similar to MacroML's \cite{ganz01}, which forces the programmers to resort to low-level syntax manipulations
-when untypeable templates or destructuring are involved.
+when untypeable templates or pattern matching are involved.
 Our experience and user reports show a clear need for a full-fledged hygienic quasiquoting facility.
 Therefore we plan to resolve the issues with \small \texttt{reify} \normalsize while retaining as much
 type safety as possible.
