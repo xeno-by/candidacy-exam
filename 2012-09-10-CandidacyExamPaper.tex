@@ -409,7 +409,7 @@ completely expanded program must bind only identifiers that are
 generated during the same transcription step.
 \end{quote}
 
-The second problem is in a sense dual to the first one. It happens when the call site
+The second problem happens when the call site
 redefines one of the procedures or macros used in the expansion. For example, on Figure 2c
 the call site hijacks the meaning of \small \texttt{if}\normalsize, which destroys the original intent of the
 macro author. This is a \emph{referential opaqueness} problem.
@@ -424,11 +424,16 @@ definition appears rather than to the top-level binding or to the
 binding visible where the macro call appears.
 \end{quote}
 
-This notion is also called \emph{cross-stage persistence} in a sense that bindings in place
+This notion is also called \emph{cross-stage persistence}, because bindings in place
 at the compilation stage are persisted into the runtime stage. When viewed in this light,
-it becomes apparent that referential transparency for macros can only work for references
-to top-level definitions. Therefore common practice is to report cross-stage references to local variables
-as errors \cite{dybvig92}.
+% it becomes apparent that referential transparency for macros can only work for references
+% to top-level definitions. Therefore common practice is to prohibit cross-stage references to local variables
+it becomes clear why referential transparency is usually supported only for top-level definitions.
+% Indeed compilation and execution might be performed in different processes and even on different machines.
+Top-level values are uniquely identified by their compile-time signatures
+(e.g. a static method in Java can be addressed by a full name of a class, name of the method and types
+of its parameters). To the contrast local values are represented by transient state
+(contents of processor registers, stack, heap etc), which in general case cannot be persisted.
 
 Despite the conveniency of automatic segregation of the scopes of macro definitions and macro call sites,
 at times it is necessary to have them melded.
@@ -677,12 +682,12 @@ Haskell code (to be precise, the notation for quoted patterns, declarations and 
 but it doesn't make much difference in the context of this discussion):
 
 Quasiquotes in Template Haskell are hygienic and referentially transparent. The former is achieved
-by alpha-renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
+by renaming bindings introduced in quasiquotes, while the latter is warranted by keeping track
 of original names that unambiguously refer to top-level variables, even if such variables are not visible
 at macro use site. A curious fact is that Template Haskell also provides cross-stage persistence for
 local variables that conform to the \small \texttt{Lift} \normalsize type class.
 
-A very interesting aspect of Template Haskell is its implementation of hygiene through alpha-renaming,
+A very interesting aspect of Template Haskell is its implementation of hygiene through renaming,
 an inherently stateful operation, in the pure Haskell environment.
 
 \small \texttt{Expr}\normalsize,
@@ -789,7 +794,7 @@ To separate lexical scopes of macro definitions and macro call sites, Nemerle co
 identifiers in the program. By default each macro expansion gets a unique color, different from
 the color of normal code, that gets assigned to the symbols it introduces. After the program
 is fully expanded Nemerle resolves bindings, i.e. for every bindee the compiler looks for
-a nearest preceding binder with the same color, performing alpha-renaming as necessary.
+a nearest preceding binder with the same color, performing renaming as necessary.
 If there's no such binder, the name is looked up
 in a global environment that corresponds to the definition site of the bindee (such environments
 are enclosed in every symbol).
@@ -817,7 +822,7 @@ To prevent inadvertent captures \small \texttt{syntax-case} \normalsize uses Dyb
 which is similar to Nemerle's color algorithm outlined above (in fact, the causal relation is inversed -
 the algorithm in Nemerle is inspired by Dybvig's work). Racket's algorithm generates fresh marks for
 every macro expansion, assigns these symbols introduced by expansions and then uses the marks to
-resolve bindings and perform alpha-renamings if necessary.
+resolve bindings and perform renamings if necessary.
 
 Much like in Nemerle, affiliation of symbols can be customized. The \small \texttt{datum->syntax} \normalsize
 function can be used to put an arbitrary S-expression into a lexical context of an arbitrary syntax object,
@@ -917,7 +922,7 @@ distortion of scopes and formulated the principles of hygiene and referential tr
 that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08}
 and automatic \cite{kohlbecker86, dybvig92} techniques that increase robustness of macros.
 Among languages studied in this paper, Template Haskell derives monadic representations
-for quasiquotes and automatically alpha-renames introduced binders \cite{sheard02}. It is
+for quasiquotes and automatically renames introduced binders \cite{sheard02}. It is
 however incapable of breaking hygiene per programmer's request without dropping
 to a low-level notation. Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 use approaches derived from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
