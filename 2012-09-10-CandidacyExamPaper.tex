@@ -86,8 +86,6 @@ metaprogramming, macros, quasiquotes, hygiene, referential transparency
 
 \section{Introduction}
 
-% \subsection{Procedural abstraction}
-
 \IEEEPARstart{P}{rocedural} abstraction is pervasive.
 Factoring out parameterized fragments of programs into procedures
 is a conventional best practice.
@@ -107,8 +105,6 @@ Another example is a C-like \small \texttt{for} \normalsize loop, which supports
 optional prologue that introduces variables visible in its body. Procedures typically cannot abstract
 over variable bindings, so they cannot readily express this language construct.
 
-% \subsection{Textual abstraction}
-
 \emph{Textual abstraction} consists of recognizing pieces of text
 that match a specification and replacing them according
 to a procedure.
@@ -120,7 +116,7 @@ Finally macros can be classified into lexical macros that
 operate on character streams and syntactic macros that work with syntax trees.
 In this paper we will only study syntactic macros.
 
-Textual abstraction provides programmers with a multitude of techniques.
+Textual abstraction enables programmers to use a multitude of techniques.
 Just to name a few of them:
 \begin{itemize}
 \item reification (having code as data),
@@ -134,25 +130,6 @@ at compile time),
 \item algorithmic program construction (generation of code that is tedious to write with
 supported abstractions).
 \end{itemize}
-
-% One possibility to implement a macro system is having it as a standalone tool
-% operating on character streams. This gives rise to lexical macros.
-% Such a design warrants simplicity of the implementation,
-% but undermines robustness, because macros operating on lexical level
-% have no mechanism that prevents generation of syntactically invalid programs.
-
-% Alternative approach is to integrate a macro expander into the compiler and
-% have macros work with syntax trees, introducing \emph{syntactic macros}.
-% In this model macro application is a node in the program tree,
-% and macro expansion produces a new node that replaces the macro application
-% without distorting the structure of the program.
-
-% A significant body of recent research in textual abstraction has been done on syntax
-% extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
-% This paper however focuses on semantics of macro-enabled languages,
-% % i.e. on preventing syntactic macros from expanding into nonsense
-% % and finding synergies with existing language features.
-% namely on ways to prevent syntactic macros from expanding into nonsense.
 
 Macros are powerful but hard to get right, because they can go wrong in unusual ways.
 For example, it is not uncommon for well-typed meta-programs to produce ill-typed programs.
