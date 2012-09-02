@@ -67,11 +67,11 @@ to a procedure.
 In the focus of the study is semantics of syntactic macros in lexically
 scoped programming languages. We highlight the problems
 of \emph{hygiene} and \emph{referential transparency}
-and describe the solutions employed Template Haskell \cite{sheard02},
+and describe the solutions employed by Template Haskell \cite{sheard02},
 Nemerle \cite{skalski04} and Racket \cite{barzilay11}.
 
 We discuss integration of hygienic macros into statically typed languages
-and plan to improve upon state of the art by providing
+and propose to improve upon state of the art by providing
 a flexible type system for syntax templates and uncovering synergies with
 high-level language features such as path-dependent types and implicits \cite{odersky10}.
 \end{abstract}
@@ -97,13 +97,13 @@ Procedures are viewed as independent programs that can communicate with the main
 As of such they can be manipulated as units, and big procedures can be built from the smaller ones.
 This is a powerful way to manage complexity of software systems.
 
-However procedural abstraction is sometimes not enough, because
+However procedural abstraction is sometimes not expressive enough, because
 its manifestations are bound by language syntax and it operates within the semantics
 of the language.
 
 For example, in most programming languages it is impossible to define short-circuiting logical operators
 as procedures, because procedures are usually not in control of operational semantics.
-Another example in this vein is a C-like \small \texttt{for} \normalsize loop, which supports
+Another example is a C-like \small \texttt{for} \normalsize loop, which supports
 optional prologue that introduces variables visible in its body. Procedures typically cannot abstract
 over variable bindings, so they cannot express this language construct.
 
@@ -113,12 +113,12 @@ over variable bindings, so they cannot express this language construct.
 that match a specification and replacing them according
 to a procedure.
 Matched fragments are called macro calls or macro applications, and
-procedures that transform them are dubbed macros or macro transformers \cite{kohlbecker86}
-(and in general sense these procedures can be referred to as meta-programs \cite{sheard01}).
+procedures that transform them are dubbed macros or macro transformers \cite{kohlbecker86}.
+In general sense these procedures can also be referred to as meta-programs \cite{sheard01}.
 The process of applying macros is called macro expansion.
 
-Having means of textual abstraction in their toolbox, programmers can use a multitude of techniques,
-some of which are:
+Textual abstraction provides programmers with a multitude of techniques.
+Just to name a few of them:
 \begin{itemize}
 \item reification (providing code as data),
 \item language virtualization (overloading/overriding semantics
@@ -370,7 +370,7 @@ These validation facilities can be packed into custom syntax classes, which can 
 Syntactic macros operate on ASTs, so they cannot produce syntactically invalid code,
 but nothing prevents such macros from making semantic errors, i.e. expanding into
 syntactically valid nonsense.
-The most blatant mistakes will result in type errors, however there's an entire class
+The most obvious mistakes will result in type errors, however there's an entire class
 of oversights that might silently change the behavior of the program.
 
 When writing procedures in lexically scoped languages, programmers typically don't need to think
@@ -484,7 +484,7 @@ f t = [d| data T = MkT $t; g (MkT x) = g+1 |]
 \end{tabular}
 
 \begin{adjustwidth}{2.5cm}{0pt}
-b) Lenient typechecking \cite{sheard02}: quasiquotes are sanity checked to prevent blatant errors\\
+b) Lenient typechecking \cite{sheard02}: quasiquotes are sanity checked to prevent obvious errors\\
 and are required to have their bindings established before macro expansions kick in.\\
 No additional checks are done, and all quasiquotes get the same type-agnostic
 \small \texttt{Expr} \normalsize type.
