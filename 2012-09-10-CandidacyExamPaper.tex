@@ -98,7 +98,6 @@ This is a powerful way to manage complexity of software systems.
 However procedural abstraction is sometimes not expressive enough, because
 its manifestations are bound by language syntax and it operates within the semantics
 of the language.
-
 For example, in most programming languages it is impossible to define short-circuiting logical operators
 as procedures, because procedures are usually not in control of evaluation order.
 Another example is a C-like \small \texttt{for} \normalsize loop, which supports
@@ -131,7 +130,7 @@ at compile time),
 supported abstractions).
 \end{itemize}
 
-Macros are powerful but hard to get right, because they can go wrong in unusual ways.
+Macros are powerful, but they can go wrong in unusual ways.
 For example, it is not uncommon for well-typed meta-programs to produce ill-typed programs.
 Moreover macro expansion may cause inadvertent variable capture, leading to
 subtle bugs. To use macros effectively programmers need to be protected from these problems.
@@ -181,12 +180,12 @@ a) Examples of a macro application and a macro expansion of the \small \texttt{l
      ,body)             ;; (print (+ x y))
    ,@(map cadr decls))) ;; (40 2)
 \end{verbatim}\\
-b) Low-level creation of syntax objects (the code manipulates S-expressions
-with standard symbol and list processing functions)
+b) Low-level creation of syntax objects. The code manipulates S-expressions
+with standard symbol and list processing functions.
 &
-c) Quasiquotation \cite{bawden99}
-(backquote introduces a static code template, commas (also known as
-unquotes) insert dynamic values into the template)
+c) Quasiquotation \cite{bawden99}.
+Backquote introduces a static code template, commas (also known as
+unquotes) insert dynamic values into the template.
 \end{tabular}
 
 \begin{tabular}{p{3.5cm} p{13.5cm}}\\
@@ -200,9 +199,9 @@ unquotes) insert dynamic values into the template)
 \end{tabular}
 
 \begin{adjustwidth}{4cm}{0pt}
-d) Macro-by-example notation \cite{kohlbecker87} (uses a tree matching macro that\\
-can extract and reassemble fragments of syntax objects; ellipses cap-\\ture
-recurrent parts of the input)
+d) Macro-by-example notation \cite{kohlbecker87}. Uses a tree matching macro that\\
+can extract and reassemble fragments of syntax objects. Ellipses cap-\\ture
+recurrent parts of the input.
 \end{adjustwidth}
 
 \begin{tabular}{p{2.5cm} p{14.5cm}}\\
@@ -218,8 +217,8 @@ recurrent parts of the input)
 \end{tabular}
 
 \begin{adjustwidth}{3.2cm}{0pt}
-e) Macro-by-example notation augmented with a syntax specification \cite{culpepper10}
-(colons \\denote syntax classes, which are first-class and can be built from the ground up).
+e) Macro-by-example notation augmented with a syntax specification \cite{culpepper10}.
+Colons \\denote syntax classes, which are first-class and can be built from the ground up.
 \end{adjustwidth}
 \end{listing}
 \end{figure*}
@@ -912,7 +911,7 @@ Textual abstraction has proven to be a powerful design tool that can be used to 
 aspects-oriented programming \cite{skalski04}, design patterns \cite{skalski05},
 classes, mixins and traits \cite{flatt06}, modules \cite{flatt10}, etc.
 
-Macros are powerful but hard to get right, because they can go wrong in unusual ways.
+Macros are powerful, but they can go wrong in unusual ways.
 For example, it is not uncommon for well-typed meta-programs to produce ill-typed programs.
 Moreover macro expansion may cause inadvertent variable capture, leading to
 subtle bugs. To use macros effectively programmers need to be protected from these problems.
