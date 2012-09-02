@@ -102,10 +102,10 @@ its manifestations are bound by language syntax and it operates within the seman
 of the language.
 
 For example, in most programming languages it is impossible to define short-circuiting logical operators
-as procedures, because procedures are usually not in control of operational semantics.
+as procedures, because procedures are usually not in control of evaluation order.
 Another example is a C-like \small \texttt{for} \normalsize loop, which supports
 optional prologue that introduces variables visible in its body. Procedures typically cannot abstract
-over variable bindings, so they cannot express this language construct.
+over variable bindings, so they cannot readily express this language construct.
 
 % \subsection{Textual abstraction}
 
@@ -120,8 +120,8 @@ The process of applying macros is called macro expansion.
 Textual abstraction provides programmers with a multitude of techniques.
 Just to name a few of them:
 \begin{itemize}
-\item reification (providing code as data),
-\item language virtualization (overloading/overriding semantics
+\item reification (having code as data),
+\item language virtualization (overloading/overriding language semantics
 to enable deep embedding of DSLs),
 \item domain-specific optimization (application of optimizations such as inlining
 or fusion based on knowledge about the program being optimized),
@@ -186,10 +186,10 @@ a) Examples of a macro application and a macro expansion of the \small \texttt{l
      ,body)             ;; (print (+ x y))
    ,@(map cadr decls))) ;; (40 2)
 \end{verbatim}\\
-b) Creates the result at low level (manipulates S-expressions
+b) Low-level creation of syntax objects (the code manipulates S-expressions
 with standard symbol and list processing functions)
 &
-c) Uses quasiquotes \cite{bawden99} as a templating mechanism
+c) Quasiquotation \cite{bawden99}
 (backquote introduces a static code template, commas (also known as
 unquotes) insert dynamic values into the template)
 \end{tabular}
@@ -216,7 +216,7 @@ recurrent parts of the input)
 (define-syntax (let stx)
   (syntax-parse stx
     ((let ((name:identifier expr:expr) ...) body:expr ...)
-     #:fail-when (check-duplicate #'(var ...))
+     #:fail-when (check-duplicate #'(name ...))
                   "duplicate variable name"
      #'((lambda (name ...) body ...) expr ...))))
 \end{verbatim}
@@ -314,7 +314,9 @@ comes from the macro call site.
 % \end{center}
 \end{figure*}
 
-\section{Examples}
+\section{Background}
+
+\subsection{Notation}
 
 \small \texttt{let} \normalsize is a language construct typical to functional programming. It introduces
 a scope for a computation and brings temporary variables with provided values into that scope.
@@ -322,24 +324,23 @@ To implement \small \texttt{let} \normalsize the compiler might wrap the computa
 and apply it right away (Figure 1a).
 
 This notion cannot be abstracted procedurally, because the body of the computation typically
-contains free variables. However textual abstraction fits the bill, because macros can manipulate
+contains free variables. To the contrast, textual abstraction can help, because macros manipulate
 the program on a level where bindings don't exist and therefore don't impose restrictions.
 
-To set up a stage for further chapters, let's implement the \small \texttt{let} \normalsize macro in Lisp.
-
-The most straightforward solution to the problem is a low-level macro transformer (Figure 1b).
+The most straightforward implementation of \small \texttt{let} \normalsize
+is a low-level macro transformer (Figure 1b).
 It takes an S-expression that represents a macro application, destructures it using standard
 list manipulation functions, such as \small \texttt{car} and \small \texttt{cdr}\normalsize,
 and creates a new S-expression with \small \texttt{cons}\normalsize.
-Even in this simple example this notation is very noisy. It's quite difficult
-to figure out expected shapes of input and output expressions from the imperative algorithm.
+Even in this simple example the notation is very noisy. It's quite difficult
+to figure out the expected shapes of input and output expressions from the imperative algorithm.
 
 Quasiquotes \cite{bawden99} make it possible to reduce obscurity of the macro by providing
 a domain-specific language for syntax templates (Figure 1c). The quasiquote operator (\texttt{`})
 demarcates a static template. Quasiquoted code is inserted verbatim into the output
 (that's why there's no longer need in explicit \small \texttt{cons}\normalsize'ing).
-Unquote operators (\texttt{,}
-and \texttt{,@}) interrupt a quasiquote, producing "holes" filled in with dynamically calculated
+Unquote operators (\texttt{,} and \texttt{,@})
+temporatily interrupt a quasiquote, creating "holes" filled in with dynamically calculated
 data. For example, for \small \texttt{let} \normalsize we statically know the shape of code to produce
 (an application of a lambda abstraction) - this makes up the static part of the quasiquote. On the other hand,
 body and parameters of the lambda as well as the arguments of the application may vary from
@@ -347,11 +348,12 @@ expansion to expansion - this is the dynamic part.
 
 Another simplification of the macro can be achieved with MBE, the macro-by-example notation
 \cite{kohlbecker87}. In their seminal work Kohlbecker and Wand came up with a specification
-of a pattern matcher that matches singular and repetitive parts of S-expressions.
-Identifiers which appear in the input pattern are treated as pattern variables,
-ellipses (\texttt{...}) used as a last element of a list that contains pattern variables
-denote repetition and, when nested, can capture lists of arbitrary depth.
-The revised version of the \small \texttt{let} \normalsize macro is particularly minimalistic (Figure 1d).
+of a pattern matcher that extracts singular and repetitive parts of S-expressions.
+Identifiers which appear in the input pattern are treated as pattern variables.
+Ellipses (\texttt{...}) used as a last element of a list that contains pattern variables
+denote repetition. Ellipses can also be nested capturing pattern variables as lists of arbitrary depth.
+The revised version of the \small \texttt{let} \normalsize macro clearly shows the shapes of the input
+and the output and the relation between them (Figure 1d).
 
 A recent development of the MBE syntax has been proposed by Culpepper and Felleisen \cite{culpepper10}.
 Their refinement addresses the need for principled input validation and error reporting. Indeed,
@@ -359,13 +361,13 @@ MBE covers the success path, but doesn't help with detecting errors. For example
 duplicate identifier names as in \small \texttt{(let ((x 40) (x 2)) (print (+ x y))} \normalsize will go
 unnoticed until the compiler gets to the resulting lambda form, which will produce
 confusing error messages. Authors enhance MBE with both declarative and procedural
-means of validation (Figure 1e). Colons next to the names of pattern variables denote syntax classes,
-which put restrictions on the shape of the variables, \small \texttt{\#:fail-when} \normalsize
-clauses can contain validation code and error messages (this doesn't cover all the capabilities
-of syntax specifications, please, refer to \cite{culpepper10} for details).
+means of validation (Figure 1e). In the example colons next to the names of pattern variables
+denote syntax classes,
+which put restrictions on the shape of the variables and the \small \texttt{\#:fail-when} \normalsize
+clause contains imperative validation code and error messages.
 These validation facilities can be packed into custom syntax classes, which can be built from the ground up.
 
-\section{Bindings}
+\subsection{Bindings}
 
 Syntactic macros operate on ASTs, so they cannot produce syntactically invalid code,
 but nothing prevents such macros from making semantic errors, i.e. expanding into
@@ -522,7 +524,7 @@ maximum freedom, permitting even unquotes in binding positions
 % \end{center}
 \end{figure*}
 
-\section{Typechecking}
+\subsection{Typechecking}
 
 An important feature of macros is that macro expansion happens before the code is executed (below in
 the paper this phase is referred to as \emph{compile-time}, despite that, strictly speaking, interpreted
@@ -583,7 +585,7 @@ immediately after the expansion, not ahead of time.
 
 However Template Haskell does require the bindings of variables used in quasiquotes to be resolved statically.
 This is done to enforce the "static scope is absolute" design principle
-(which is a rehash of hygiene and referential transparency conditions outlined in the previous chapter)
+(which is a rehash of hygiene and referential transparency conditions outlined above)
 as stated in \cite{sheard03}:
 \begin{quote}
 If an occurrence of a variable \small \texttt{x} \normalsize looks as if it is lexically bound
@@ -606,7 +608,7 @@ this brings the evolution to square one.
 
 \section{Case study}
 
-This chapter discusses Template Haskell \cite{sheard02},
+This section discusses Template Haskell \cite{sheard02},
 Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 in the light of hygiene and referential transparency.
 
@@ -630,7 +632,7 @@ Another aspect that we will omit from consideration is the way the macro expande
 acquires and loads binary code of macros. For the record, all three reviewed languages are compiled,
 but they differ in their treatment of the situation. Template Haskell and Nemerle require separate
 compilation, whereas Racket allows joint compilation with extra precautions against cross-stage
-pollution of top-level scope.% \cite{flatt02}.
+pollution of top-level scope \cite{flatt02}.
 
 Finally, in Nemerle and Racket macros can change the syntax of the language.
 As mentioned in the introduction, syntax extensibility is a lively
@@ -944,7 +946,7 @@ Therefore we plan to resolve the issues with \small \texttt{reify} \normalsize w
 type safety as possible.
 
 Another direction of research is integration with Scala's rich type system.
-For example, our early adopters have suggested that the combination of vanilla macros, type macros
+For example, our early adopters have suggested that the combination of macros
 and path-dependent types can be used to contain and propagate effects. One more conjecture is that
 synergy between macros and implicits might grant Scala theorem-proving powers.
 
@@ -980,20 +982,20 @@ T.~Sheard,
 Accomplishments and Research Challenges in Meta-Programming.
 Semantics, Applications, and Implementation of Program Generation, 2001.
 
-\bibitem{atkinson11}
-K.~Atkinson and M.~Flatt,
-Adapting Scheme-like macros to a C-like language.
-Scheme and Functional Programming, 2011.
+% \bibitem{atkinson11}
+% K.~Atkinson and M.~Flatt,
+% Adapting Scheme-like macros to a C-like language.
+% Scheme and Functional Programming, 2011.
 
-\bibitem{allen09}
-E.~Allen, R.~Culpepper, J-D.~Nielsen, J.~Rafkind and S.~Ryu,
-Growing a Syntax.
-Foundations of Object-Oriented Languages, 2009.
+% \bibitem{allen09}
+% E.~Allen, R.~Culpepper, J-D.~Nielsen, J.~Rafkind and S.~Ryu,
+% Growing a Syntax.
+% Foundations of Object-Oriented Languages, 2009.
 
-\bibitem{erdweg11}
-S.~Erdweg, T.~Rendel, C.~K\"{a}stner and K.~Ostermann,
-SugarJ: Library-based syntactic language extensibility,
-Object-Oriented Programming, Systems, Languages, and Applications, 2011.
+% \bibitem{erdweg11}
+% S.~Erdweg, T.~Rendel, C.~K\"{a}stner and K.~Ostermann,
+% SugarJ: Library-based syntactic language extensibility,
+% Object-Oriented Programming, Systems, Languages, and Applications, 2011.
 
 \bibitem{dybvig92}
 R.~Dybvig, R.~Hieb and  C.~Bruggeman,
@@ -1055,10 +1057,10 @@ Glasgow Haskell Compiler, 2003.
 % Reference: Racket,
 % PLT Inc., 2010.
 
-% \bibitem{flatt02}
-% M.~Flatt,
-% Composable and Compilable Macros: You Want it When?
-% International Conference on Functional Programming, 2002.
+\bibitem{flatt02}
+M.~Flatt,
+Composable and Compilable Macros: You Want it When?
+International Conference on Functional Programming, 2002.
 
 % \bibitem{bawden00}
 % A.~Bawden,
