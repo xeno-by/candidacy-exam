@@ -132,24 +132,46 @@ at compile time),
 supported abstractions).
 \end{itemize}
 
-One possibility to implement a macro system is having it as a standalone tool
-operating on character streams. This gives rise to lexical macros.
-Such a design warrants simplicity of the implementation,
-but undermines robustness, because macros operating on lexical level
-have no mechanism that prevents generation of syntactically invalid programs.
+% One possibility to implement a macro system is having it as a standalone tool
+% operating on character streams. This gives rise to lexical macros.
+% Such a design warrants simplicity of the implementation,
+% but undermines robustness, because macros operating on lexical level
+% have no mechanism that prevents generation of syntactically invalid programs.
 
-Alternative approach is to integrate a macro expander into the compiler and
-have macros work with syntax trees, introducing \emph{syntactic macros}.
-In this model macro application is a node in the program tree,
-and macro expansion produces a new node that replaces the macro application
-without distorting the structure of the program.
+% Alternative approach is to integrate a macro expander into the compiler and
+% have macros work with syntax trees, introducing \emph{syntactic macros}.
+% In this model macro application is a node in the program tree,
+% and macro expansion produces a new node that replaces the macro application
+% without distorting the structure of the program.
 
-A significant body of recent research in textual abstraction has been done on syntax
-extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
-This paper however focuses on semantics of macro-enabled languages,
-% i.e. on preventing syntactic macros from expanding into nonsense
-% and finding synergies with existing language features.
-namely on ways to prevent syntactic macros from expanding into nonsense.
+% A significant body of recent research in textual abstraction has been done on syntax
+% extensibility (\cite{atkinson11, allen09, erdweg11} to name only a few).
+% This paper however focuses on semantics of macro-enabled languages,
+% % i.e. on preventing syntactic macros from expanding into nonsense
+% % and finding synergies with existing language features.
+% namely on ways to prevent syntactic macros from expanding into nonsense.
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Ut
+purus elit, vestibulum ut, placerat ac, adipiscing vitae, felis.
+Curabitur dictum gravida mauris. Nam arcu libero, nonummy
+eget, consectetuer id, vulputate a, magna. Donec vehicula
+augue eu neque. Pellentesque habitant morbi tristique senectus
+et netus et malesuada fames ac turpis egestas. Mauris ut leo.
+Cras viverra metus rhoncus sem. Nulla et lectus vestibulum
+urna fringilla ultrices. Phasellus eu tellus sit amet tortor
+gravida placerat. Integer sapien est, iaculis in, pretium quis,
+viverra ac, nunc. Praesent eget sem vel leo ultrices bibendum.
+Aenean faucibus. Morbi dolor nulla, malesuada eu, pulvinar at,
+mollis ac, nulla. Curabitur auctor semper nulla. Donec varius
+orci eget risus. Duis nibh mi, congue eu, accumsan eleifend,
+sagittis quis, diam. Duis eget orci sit amet orci dignissim
+rutrum.
+
+Nam dui ligula, fringilla a, euismod sodales, sollicitudin
+vel, wisi. Morbi auctor lorem non justo. Nam lacus libero,
+pretium at, lobortis vitae, ultricies et, tellus. Donec aliquet,
+tortor sed accumsan bibendum, erat ligula aliquet magna, vitae
+ornare odio metus a mi.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -369,7 +391,7 @@ These validation facilities can be packed into custom syntax classes, which can 
 
 \subsection{Bindings}
 
-Syntactic macros operate on ASTs, so they cannot produce syntactically invalid code,
+Syntactic macros operate on trees, so they cannot produce syntactically invalid code,
 but nothing prevents such macros from making semantic errors, i.e. expanding into
 syntactically valid nonsense.
 The most obvious mistakes will result in type errors, however there's an entire class
@@ -564,7 +586,7 @@ Unfortunately this means that MetaML has to give up the freedom of arbitrary man
 of syntax objects, the most important of which are pattern matching and introduction of new bindings.
 (e.g. in MetaML it’s impossible to express \small \texttt{let} \normalsize as a macro).
 
-MacroML \cite{ganz01,taha03}, a macro system built atop of MetaML,
+MacroML \cite{ganz01}, a macro system built atop of MetaML,
 provides a way to partially alleviate this restriction, letting
 the programmer introduce new binding constructs in a controlled setting.
 This is achieved by having the type system track
@@ -909,16 +931,23 @@ and are easily discoverable, since they are defined together with the originatin
 
 \section{Conclusion}
 
-% Textual abstraction has proven to be a powerful design tool that can be used to implement
-% aspects-oriented programming \cite{skalski04}, design patterns \cite{skalski05},
-% classes, mixins and traits \cite{flatt06}, modules \cite{flatt10}, etc.
+Textual abstraction has proven to be a powerful design tool that can be used to implement
+aspects-oriented programming \cite{skalski04}, design patterns \cite{skalski05},
+classes, mixins and traits \cite{flatt06}, modules \cite{flatt10}, etc.
 
-Macro expansions can go wrong in several ways. The simple one is introduction of type errors,
-% because of malformed syntax objects, or individually well-typed syntax objects not playing well together.
-the more sophisticated one is inadvertent collision of lexical scopes.
+Macros are powerful but hard to get right, because they can go wrong in unusual ways.
+For example, it is not uncommon for well-typed meta-programs produce ill-typed programs.
+Moreover macro expansion may cause inadvertent variable capture, leading to
+subtle bugs. To use macros effectively programmers need to be protected from these problems.
 
-Evolution of Lisp identified the problems that lead to
-distortion of scopes and formulated the principles of hygiene and referential transparency
+Typechecking algorithms that catch errors in meta-programs are pioneered by MetaML \cite{taha99}.
+Its static typechecking discipline for quasiquotes has proven to be overly restrictive when applied to
+macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
+restrictive. Therefore Nemerle doesn't typecheck quasiquotes at all, relying on a mandatory typecheck
+after macro expansion. This area is in a clear need of improvement.
+
+Evolution of Lisp identified the problems that cause
+inadvertent capture and formulated the principles of hygiene and referential transparency
 that prevent such errors. This gave rise to manual \cite{clinger91a,hoyte08}
 and automatic \cite{kohlbecker86, dybvig92} techniques that increase robustness of macros.
 Among languages studied in this paper, Template Haskell uses monadic representations
@@ -926,33 +955,31 @@ for quasiquotes and automatically renames introduced binders \cite{sheard02}. It
 however incapable of breaking hygiene per programmer's request without dropping
 to a low-level notation. Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 use approaches derived from Dybvig's algorithm \cite{dybvig92}, which provides scope isolation by default
-as well as mechanisms for manual control.
-
-Typechecking algorithms that catch errors in meta-programs are pioneered by MetaML
-\cite{taha99,ganz01,taha03}.
-Its static typechecking discipline for quasiquotes has proven to be overly restrictive when applied to
-macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
-restrictive. Therefore Nemerle doesn't typecheck quasiquotes at all, relying on a mandatory typecheck
-after macro expansion.
+as well as mechanisms for manual control. This is a universal solution to the scoping problem,
+but as shown by \cite{barzilay11} it is sometimes inefficient, trumped by more high-level techniques.
 
 \section{Research proposal}
 
-We implemented a macro system \cite{burmako12} for the Scala programming language \cite{odersky10}
+As a substrate for our research, we implemented a macro system \cite{burmako12}
+for the Scala programming language \cite{odersky10}
 and integrated it into a production version of the Scala compiler.
 
-The main contribution of our work is bootstrapping of a minimalistic non-hygienic macro system
-without quasiquotes into a hygienic extension with high-level means of building syntax objects.
+The cornerstone of the system is the \small \texttt{reify} \normalsize macro that bootstraps
+a minimalistic non-hygienic macro system into a hygienic facility with quasiquotes.
 
-The \small \texttt{reify} \normalsize macro that implements the bootstrapping is based on a notion
-similar to MacroML's \cite{ganz01}, which forces the programmers to resort to low-level syntax manipulations
-when untypeable templates or pattern matching are involved.
-Our experience and user reports show a clear need for a full-fledged hygienic quasiquoting facility.
-Therefore we plan to resolve the issues with \small \texttt{reify} \normalsize while retaining as much
-type safety as possible.
+Currently \small \texttt{reify} \normalsize only works with statically well-typed syntax objects.
+This makes it akin to MacroML \cite{ganz01} with all the pros and cons. On the one hand, this
+technique prevents macros from producing ill-typed code. But on the other hand,
+\small \texttt{reify} \normalsize becomes inapplicable when pattern matching or statically untypeable
+quasiquotes are involved.
 
-Another direction of research is integration with Scala's rich type system.
+Our experience and user reports show a clear need for more flexibility, but we would not like to give up
+static guarantees about meta-programs like it was done in Nemerle \cite{skalski04}. Coming up with a more
+permissive typechecking discipline is our immediate goal.
+
+A long-term direction of research is a quest for high-level abstractions that synergize with macros.
 For example, our early adopters have suggested that the combination of macros
-and path-dependent types can be used to contain and propagate effects. One more conjecture is that
+and path-dependent types can be used to contain and propagate effects. Another conjecture is that
 synergy between macros and implicits might grant Scala theorem-proving powers.
 
 \begin{thebibliography}{99}
@@ -1042,25 +1069,25 @@ S.~Ganz, A.~Sabry, W.~Taha,
 Macros as Multi-Stage Computations: Type-Safe, Generative, Binding Macros in MacroML.
 International Conference on Functional Programming, 2001.
 
-\bibitem{taha03}
-W.~Taha and P.~Johann,
-Staged Notational Definitions.
-Generative Programming and Component Engineering, 2003.
+% \bibitem{taha03}
+% W.~Taha and P.~Johann,
+% Staged Notational Definitions.
+% Generative Programming and Component Engineering, 2003.
 
-% \bibitem{skalski05}
-% K.~Skalski,
-% Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
-% MsC Thesis, University of Wroc{\l}aw, 2005.
+\bibitem{skalski05}
+K.~Skalski,
+Syntax-Extending and Type-Reflecting Macros in an Object-Oriented Language.
+MsC Thesis, University of Wroc{\l}aw, 2005.
 
 \bibitem{sheard03}
 T.~Sheard and S.~Peyton Jones,
 Notes on Template Haskell Version 2.
 Glasgow Haskell Compiler, 2003.
 
-% \bibitem{flatt10}
-% M.~Flatt and PLT,
-% Reference: Racket,
-% PLT Inc., 2010.
+\bibitem{flatt10}
+M.~Flatt and PLT,
+Reference: Racket,
+PLT Inc., 2010.
 
 \bibitem{flatt02}
 M.~Flatt,
@@ -1072,10 +1099,10 @@ International Conference on Functional Programming, 2002.
 % First-class Macros Have Types.
 % Principles of Programming Languages, 2000.
 
-% \bibitem{flatt06}
-% M.~Flatt, R.~B.~Findler and M.~Felleisen,
-% Scheme with classes, mixins, and traits.
-% Asian Symposium on Programming Languages and Systems, 2006.
+\bibitem{flatt06}
+M.~Flatt, R.~B.~Findler and M.~Felleisen,
+Scheme with classes, mixins, and traits.
+Asian Symposium on Programming Languages and Systems, 2006.
 
 % \bibitem{clinger91b}
 % W.~Clinger and J.~Rees,
