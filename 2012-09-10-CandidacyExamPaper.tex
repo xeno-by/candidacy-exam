@@ -116,6 +116,9 @@ Matched fragments are called macro calls or macro applications, and
 procedures that transform them are dubbed macros or macro transformers \cite{kohlbecker86}.
 In general sense these procedures can also be referred to as meta-programs \cite{sheard01}.
 The process of applying macros is called macro expansion.
+Finally macros can be classified into lexical macros that
+operate on character streams and syntactic macros that work with syntax trees.
+In this paper we will only study syntactic macros.
 
 Textual abstraction provides programmers with a multitude of techniques.
 Just to name a few of them:
@@ -160,11 +163,11 @@ The aim of this research is to improve upon state of the art by providing better
 disciplines for meta-programs and looking for high-level abstractions that encapsulate macros,
 e.g. those which come from already existing language features.
 
-The paper is organized as follows. First we introduce the background by following the evolution
-of macros and outlining typical pitfalls. Then we survey
+The paper is organized as follows. First we introduce the background by analyzing examples
+of syntactic macros and outlining typical pitfalls. Then we survey
 macro systems in Template Haskell \cite{sheard02}, Nemerle \cite{skalski04} and Racket \cite{barzilay11}
-and their approaches to containing the problems. Finally we summarize our findings
-and propose directions for research.
+and their approaches to addressing these pitfalls. Finally we summarize our findings
+and propose the directions for research.
 
 \begin{figure*}[t]
 \begin{listing}
@@ -331,7 +334,11 @@ comes from the macro call site.
 
 \section{Background}
 
-\subsection{Notation}
+This section starts off with several examples of macros
+and proceeds by uncovering typical errors in macro transformers
+and outlining the approaches that can be used to prevent these errors.
+
+\subsection{Examples}
 
 \small \texttt{let} \normalsize is a language construct typical to functional programming. It introduces
 a scope for a computation and brings temporary variables with provided values into that scope.
@@ -384,11 +391,11 @@ These validation facilities can be packed into custom syntax classes, which can 
 
 \subsection{Bindings}
 
-Syntactic macros operate on trees, so they cannot produce syntactically invalid code,
-but nothing prevents such macros from making semantic errors, i.e. expanding into
-syntactically valid nonsense.
-The most obvious mistakes will result in type errors, however there's an entire class
-of oversights that might silently change the behavior of the program.
+% Syntactic macros operate on trees, so they cannot produce syntactically invalid code,
+% but nothing prevents such macros from making semantic errors, i.e. expanding into
+% syntactically valid nonsense.
+% The most obvious mistakes will result in type errors, however there's an entire class
+% of oversights that might silently change the behavior of the program.
 
 When writing procedures in lexically scoped languages, programmers typically don't need to think
 about name clashes between variables declared inside procedures and at their call sites.
