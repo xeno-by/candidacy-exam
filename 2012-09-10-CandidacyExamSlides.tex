@@ -72,29 +72,31 @@ Textual abstraction:
 
 
 
-
+\pause
 ((lambda (x) (print x)) 42)
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Example}
+\frametitle<1>{Step 1. Recognize pieces of text}
+\frametitle<2>{Step 1. Recognize pieces of text}
+\frametitle<3>{Step 2. Replace them according to a procedure}
 \begin{semiverbatim}
-(let (x 42) (print x))
+(\only<1,3>{let}\only<2>{\text{\color{blue}{let}}} \only<1,3>{(x 42) (print x)}\only<2>{\text{\color{red}{(x 42) (print x)}}})
 
-(defmacro let args
-  \visible<2->{(cons}
-   \visible<2->{(cons 'lambda}
-         \visible<2->{(cons (list (caar args))}
-               \visible<2->{(cdr args)))}
-   \visible<2->{(cdar args)))}
+(defmacro \only<1,3>{let}\only<2>{\text{\color{blue}{let}}} \only<1,3>{args}\only<2>{\text{\color{red}{args}}}
+  \visible<3->{(cons}
+   \visible<3->{(cons 'lambda}
+         \visible<3->{(cons (list (caar args))}
+               \visible<3->{(cdr args)))}
+   \visible<3->{(cdar args)))}
 
 ((lambda (x) (print x)) 42)
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Example}
+\frametitle{Step 2. Replace them according to a procedure}
 \begin{semiverbatim}
 (let (\text{\color{red}{x}} \text{\color{teal}{42}}) \text{\color{violet}{(print x)}})
 
@@ -107,6 +109,14 @@ Textual abstraction:
 
 ((\text{\color{blue}{lambda}} (\text{\color{red}{x}}) \text{\color{violet}{(print x)}}) \text{\color{teal}{42}})
 \end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The essence of macros}
+\begin{itemize}
+\item Recognize pieces of text that match a specification
+\item Replace them according to a procedure
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -139,19 +149,19 @@ Surveyed papers are versatile as well.
 \begin{frame}[fragile]
 \frametitle{Today's talk}
 
-Going into all the details is a genuine pleasure
+Going into all the details would be a genuine pleasure.
 % and I would invite you to share this pleasure with me during the second part of the oral exam.
 
-But instead let me tell you a story
+But instead let me tell you a story.
 \end{frame}
 
-\begin{frame}[fragile]
-\frametitle{Alexandre Dumas}
+% \begin{frame}[fragile]
+% \frametitle{Alexandre Dumas}
 
-\begin{center}
-\includegraphics[width=5.5cm]{dumas}
-\end{center}
-\end{frame}
+% \begin{center}
+% \includegraphics[width=5.5cm]{dumas}
+% \end{center}
+% \end{frame}
 
 \section{The prelude of macros}
 
@@ -159,7 +169,7 @@ But instead let me tell you a story
 \frametitle<1>{Anaphoric \texttt{if}}
 \frametitle<2>{Anaphoric \texttt{if}}
 \frametitle<3>{The \texttt{aif} macro}
-\frametitle<4->{Start with a template}
+\frametitle<4->{Start with a notation}
 \begin{semiverbatim}
 (aif (calculate)
   (print it)
@@ -181,7 +191,7 @@ But instead let me tell you a story
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Surround with parentheses}
+\frametitle{Surround it with parentheses}
 \begin{semiverbatim}
 (aif (calculate)
   (print it)
