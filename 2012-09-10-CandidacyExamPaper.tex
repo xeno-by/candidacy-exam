@@ -154,7 +154,7 @@ and propose new directions for research.
 \begin{verbatim}
 (let ((x 40) (y 2)) (print (+ x y)))
 
-((lambda (x y) (print (+ x y))) (40 2))
+((lambda (x y) (print (+ x y))) 40 2)
 \end{verbatim}
 \end{tabular}
 
@@ -178,7 +178,7 @@ a) Examples of a macro application and a macro expansion of the \small \texttt{l
    (lambda
      ,(map car decls)   ;; (x y)
      ,body)             ;; (print (+ x y))
-   ,@(map cadr decls))) ;; (40 2)
+   ,@(map cadr decls))) ;; 40 2
 \end{verbatim}\\
 b) Low-level creation of syntax objects. The code manipulates S-expressions
 with standard symbol and list processing functions.
