@@ -130,17 +130,17 @@ at compile time),
 supported abstractions).
 \end{itemize}
 
-Macros are powerful, but they can go wrong in unusual ways.
-For example, it is not uncommon for well-typed meta-programs to produce ill-typed programs.
-Moreover macro expansion may cause inadvertent variable capture, leading to
-subtle bugs. To use macros effectively programmers need to be protected from these problems.
+To use macros efficiently programmers need to be sure that generated programs don't go wrong.
+This presents quite a challenge, because in most macro systems even well-typed macros
+can produce ill-typed code. Another common source of errors are name clashes introduced
+by macro expansions, when variables end up referring to wrong definitions.
 
 The aim of this research is to improve upon the state of the art by providing better typechecking
 disciplines for meta-programs and looking for high-level abstractions that encapsulate macros,
 e.g. those which come from already existing language features.
 
 The paper is organized as follows. First we introduce the background by analyzing examples
-of syntactic macros and outlining typical pitfalls. Then we survey
+and outlining typical pitfalls. Then we survey
 macro systems in Template Haskell \cite{sheard02}, Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 and their approaches to addressing these pitfalls. Finally we summarize our findings
 and propose new directions for research.
@@ -793,7 +793,7 @@ is fully expanded, Nemerle resolves bindings, i.e. for every bindee the compiler
 a nearest preceding binder with the same color.
 If there's no such binder, the name is looked up
 in a global environment that corresponds to the definition site of the bindee (such environments
-are enclosed in every symbol).
+are enclosed in every symbol) \cite{skalski04}.
 
 An important characteristic of this algorithm is that colors are fully customizable.
 Using an API exposed by the expander it is possible to recolor individual symbols and
