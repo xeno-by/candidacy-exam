@@ -10,16 +10,26 @@
 ;;(list 'if 'temp
 ;;(cadr args)
 ;;(caddr args))))
-(defmacro aif args
-`(let*
-((temp ,(car args))
-(it
-temp))
-(if
-temp
-,(cadr args)
-,(caddr args))))
+;;
+;;(defmacro aif args
+;;`(let*
+;;((temp ,(car args))
+;;(it
+;;temp))
+;;(if
+;;temp
+;;,(cadr args)
+;;,(caddr args))))
+;;
+(define-syntax aif
+  (syntax-rules ()
+    ((aif cond then else)
+     (let* ((temp cond)
+            (it temp))
+       (if temp 
+           then 
+           else)))))
 
 (aif (calculate)
-(print it)
+(print "it")
 (error "does not compute"))

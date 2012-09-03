@@ -153,7 +153,7 @@ But instead let me tell you a story
 \end{center}
 \end{frame}
 
-\section{The story of bindings}
+\section{The prelude of macros}
 
 \begin{frame}[fragile]
 \frametitle<1>{Anaphoric \texttt{if}}
@@ -245,5 +245,63 @@ But instead let me tell you a story
     (error "does not compute")))
 \end{semiverbatim}
 \end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Unquote}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+(defmacro      aif args
+
+
+    `(let* ((temp ,(car args))
+            (it temp))
+       (if temp
+           ,(cadr args)
+           ,(caddr args))))
+
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Macro by example (MBE)}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+(define-syntax aif
+  (syntax-rules ()
+    (\alert{(aif cond then else)}
+     (let* ((temp \alert{cond})
+            (it temp))
+       (if temp
+           \alert{then}
+           \alert{else})))))
+
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Interlude}
+\begin{itemize}
+\item Macros are regular functions that happen to work with syntax objects
+\item Quasiquotes = static templates + dynamic holes
+\end{itemize}
+\end{frame}
+
+\section{The tale of bindings}
 
 \end{document}
