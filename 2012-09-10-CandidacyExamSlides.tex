@@ -156,10 +156,10 @@ But instead let me tell you a story
   (error "does not compute"))
 
 \visible<2->{(defmacro aif args}
-  \visible<4->{\alert<4>{(list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{let }\visible<4->{\alert<4>{(list (list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{it \text{\color{red}{(car args)}}}\only<3>{)}\visible<4->{)\alert<4>{)}}
-    \visible<4->{\alert<4>{(list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{if }\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{it}
-            \visible<3->{\text{\color{purple}{(cadr args)}}}
-            \visible<3->{\text{\color{teal}{(caddr args)}}}\only<4->{))\alert<4>{)}}\only<3>{))}
+  \visible<4->{\only<1-3>{      }\only<4>{\alert{(list }}\only<5->{\alert{     `}}}\only<5>{\alert{(}}\only<4>{\alert{'}}\only<3>{(}\visible<3->{let }\visible<4>{\alert{(list (list }}\only<4>{\alert{'}}\only<3,5->{(}\visible<3->{it (car args)}\only<3,5->{)}\visible<4>{)\alert{)}}
+    \visible<4>{\alert{(list }}\only<4>{\alert{'}}\only<3>{(}\visible<3->{if }\only<4>{\alert{'}}\only<3>{ }\visible<3->{it}
+            \visible<3->{(cadr args)}
+            \visible<3->{(caddr args)}\visible<3->{))}\only<4,5->{\alert{)}}
 
 (let (it (calculate))
   (if it
