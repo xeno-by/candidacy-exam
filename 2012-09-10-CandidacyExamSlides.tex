@@ -80,6 +80,22 @@ Textual abstraction:
 \begin{frame}[fragile]
 \frametitle{Example}
 \begin{semiverbatim}
+(let (x 42) (print x))
+
+(defmacro let args
+  \visible<2->{(cons}
+   \visible<2->{(cons 'lambda}
+         \visible<2->{(cons (list (caar args))}
+               \visible<2->{(cdr args)))}
+   \visible<2->{(cdar args)))}
+
+((lambda (x) (print x)) 42)
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example}
+\begin{semiverbatim}
 (let (\text{\color{red}{x}} \text{\color{teal}{42}}) \text{\color{violet}{(print x)}})
 
 (defmacro let args
@@ -140,32 +156,27 @@ But instead let me tell you a story
 \section{The story of bindings}
 
 \begin{frame}[fragile]
-\frametitle{Anaphoric \texttt{if}}
-\begin{semiverbatim}
-(aif (calculate)
-  (print it)
-  (error "does not compute"))
-\end{semiverbatim}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle<1>{The \texttt{aif} macro}
-\frametitle<2>{Start with a template}
+\frametitle<1>{Anaphoric \texttt{if}}
+\frametitle<2>{Anaphoric \texttt{if}}
+\frametitle<3>{The \texttt{aif} macro}
+\frametitle<4->{Start with a template}
 \begin{semiverbatim}
 (aif (calculate)
   (print it)
   (error "does not compute"))
 
-(defmacro aif args
-        \visible<2>{(let             (it  (car args))}
-          \visible<2>{(if  it}
-             \visible<2>{(cadr args)}
-             \visible<2>{(caddr args))))}
+\visible<3->{(defmacro aif args}
+        \visible<4->{(let*            ((temp  (car args))}
+        \visible<4->{                  (it  temp))}
+          \visible<4->{(if  it}
+             \visible<4->{(cadr args)}
+             \visible<4->{(caddr args))))}
 
-(let (it (calculate))
-  (if it
-    (print it)
-    (error "does not compute")))
+\visible<2->{(let* ((temp (calculate))}
+       \visible<2->{(it temp))}
+  \visible<2->{(if temp}
+    \visible<2->{(print it)}
+    \visible<2->{(error "does not compute")))}
 \end{semiverbatim}
 \end{frame}
 
@@ -177,13 +188,15 @@ But instead let me tell you a story
   (error "does not compute"))
 
 (defmacro aif args
-  \alert{(list '}let \alert{(list (list '}it  (car args))\alert{)}
-    \alert{(list '}if \alert{'}it
+  \alert{(list '}let* \alert{(list (list '}temp  (car args))
+  \alert{                  (list '}it \alert{'}temp\alert{))}
+    \alert{(list '}if \alert{'}temp
              (cadr args)
-             (caddr args))))\alert{)}
+             (caddr args)\alert{))})
 
-(let (it (calculate))
-  (if it
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
     (print it)
     (error "does not compute")))
 \end{semiverbatim}
@@ -197,13 +210,15 @@ But instead let me tell you a story
   (error "does not compute"))
 
 (defmacro aif args
-  \alert{     `}(let             (it  ..........)
-          (if  it
+  \alert{     `}(let*            ((temp  ..........)
+                          (it  temp))
+          (if  temp
              ............
              ............)))
 
-(let (it (calculate))
-  (if it
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
     (print it)
     (error "does not compute")))
 \end{semiverbatim}
@@ -217,13 +232,15 @@ But instead let me tell you a story
   (error "does not compute"))
 
 (defmacro aif args
-  \alert{     `}(let             (it \alert{,(car args)})
-          (if  it
+  \alert{     `}(let*            ((temp \alert{,(car args)})
+                          (it  temp))
+          (if  temp
             \alert{,(cadr args)}
             \alert{,(caddr args)})))
 
-(let (it (calculate))
-  (if it
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
     (print it)
     (error "does not compute")))
 \end{semiverbatim}
