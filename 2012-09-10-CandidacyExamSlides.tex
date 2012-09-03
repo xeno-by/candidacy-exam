@@ -149,17 +149,78 @@ But instead let me tell you a story
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{The \texttt{aif} macro}
+\frametitle<1>{The \texttt{aif} macro}
+\frametitle<2>{Start with a template}
 \begin{semiverbatim}
 (aif (calculate)
   (print it)
   (error "does not compute"))
 
-\visible<2->{(defmacro aif args}
-  \visible<4->{\only<1-3>{      }\only<4>{\alert{(list }}\only<5->{\alert{     `}}}\only<5>{\alert{(}}\only<4>{\alert{'}}\only<3>{(}\visible<3->{let }\visible<4>{\alert{(list (list }}\only<4>{\alert{'}}\only<3,5->{(}\visible<3->{it (car args)}\only<3,5->{)}\visible<4>{)\alert{)}}
-    \visible<4>{\alert{(list }}\only<4>{\alert{'}}\only<3>{(}\visible<3->{if }\only<4>{\alert{'}}\only<3>{ }\visible<3->{it}
-            \visible<3->{(cadr args)}
-            \visible<3->{(caddr args)}\visible<3->{))}\only<4,5->{\alert{)}}
+(defmacro aif args
+        \visible<2>{(let             (it  (car args))}
+          \visible<2>{(if  it}
+             \visible<2>{(cadr args)}
+             \visible<2>{(caddr args))))}
+
+(let (it (calculate))
+  (if it
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Surround with parentheses}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+(defmacro aif args
+  \alert{(list '}let \alert{(list (list '}it  (car args))\alert{)}
+    \alert{(list '}if \alert{'}it
+             (cadr args)
+             (caddr args))))\alert{)}
+
+(let (it (calculate))
+  (if it
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Quasiquote}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+(defmacro aif args
+  \alert{     `}(let             (it  ..........)
+          (if  it
+             ............
+             ............)))
+
+(let (it (calculate))
+  (if it
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Unquote}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+(defmacro aif args
+  \alert{     `}(let             (it \alert{,(car args)})
+          (if  it
+            \alert{,(cadr args)}
+            \alert{,(caddr args)})))
 
 (let (it (calculate))
   (if it
