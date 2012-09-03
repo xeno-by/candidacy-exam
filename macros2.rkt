@@ -2,11 +2,15 @@
 
 (require mzlib/defmacro)
 
-(defmacro let args
-  (cons
-   (cons 'lambda
-         (cons (list (caar args))
-               (cdr args)))
-   (cdar args)))
+(defmacro aif args
+  (list 'let 
+        (list (list 'it (car args)))
+        (list 'if
+              'it
+              (cadr args)
+              (caddr args))))
 
-(let (x 42) (print x))
+(define calculate (lambda () 42))
+(aif (calculate)
+  (print it)
+  (error "does not compute"))

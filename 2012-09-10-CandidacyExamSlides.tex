@@ -63,7 +63,6 @@ Textual abstraction:
 
 \begin{frame}[fragile]
 \frametitle{Example}
-\begin{lstlistinglike}
 \begin{semiverbatim}
 (let (x 42) (print x))
 
@@ -76,12 +75,10 @@ Textual abstraction:
 
 ((lambda (x) (print x)) 42)
 \end{semiverbatim}
-\end{lstlistinglike}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Example}
-\begin{lstlistinglike}
 \begin{semiverbatim}
 (let (\text{\color{red}{x}} \text{\color{teal}{42}}) \text{\color{violet}{(print x)}})
 
@@ -94,7 +91,6 @@ Textual abstraction:
 
 ((\text{\color{blue}{lambda}} (\text{\color{red}{x}}) \text{\color{violet}{(print x)}}) \text{\color{teal}{42}})
 \end{semiverbatim}
-\end{lstlistinglike}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -142,5 +138,34 @@ But instead let me tell you a story
 \end{frame}
 
 \section{The story of bindings}
+
+\begin{frame}[fragile]
+\frametitle{Anaphoric \texttt{if}}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{aif} macro}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
+  (error "does not compute"))
+
+\visible<2->{(defmacro aif args}
+  \visible<4->{\alert<4>{(list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{let }\visible<4->{\alert<4>{(list (list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{it \text{\color{red}{(car args)}}}\only<3>{)}\visible<4->{)\alert<4>{)}}
+    \visible<4->{\alert<4>{(list }}\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{if }\only<4->{\alert<4>{'}}\only<3>{(}\visible<3->{it}
+            \visible<3->{\text{\color{purple}{(cadr args)}}}
+            \visible<3->{\text{\color{teal}{(caddr args)}}}\only<4->{))\alert<4>{)}}\only<3>{))}
+
+(let (it (calculate))
+  (if it
+    (print it)
+    (error "does not compute")))
+\end{semiverbatim}
+\end{frame}
 
 \end{document}
