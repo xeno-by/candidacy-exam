@@ -1,6 +1,4 @@
-
 \documentclass[hyperref={bookmarks=false}]{beamer}
-
 \useoutertheme{infolines}
 \setbeamertemplate{headline}{} % removes the headline that infolines inserts
 % \setbeamertemplate{footline}{
@@ -16,41 +14,8 @@
   \insertpagenumber\kern1em\vskip2pt%
 }
 \setbeamertemplate{navigation symbols}{}
-
-\usepackage[parfill]{parskip}
-\usepackage{color}
-\usepackage{listings}
-\usepackage{textcomp}
-\usepackage[linewidth=0.5pt]{mdframed}
-\usepackage{hyperref}
-\usepackage{ulem}
-\usepackage{tikz}
-\normalem
-\hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
-\title{Scala Macros}
-
-\lstset{frame=tb,
-  aboveskip=3mm,
-  belowskip=3mm,
-  showstringspaces=false,
-  columns=flexible,
-  basicstyle={\small\ttfamily},
-  numbers=none,
-  numberstyle=\tiny\color{0.5,0.5,0.5},
-  keywordstyle=\color{blue},
-  commentstyle=\color{0,0.6,0},
-  stringstyle=\color{0.58,0,0.82},
-  frame=single,
-  breaklines=true,
-  breakatwhitespace=true
-  tabsize=3
-}
-
 \setbeamercolor{alerted text}{fg=blue}
 \setbeamerfont{alerted text}{series=\bfseries,family=\ttfamily}
-
-\newmdenv[innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=-1mm, innerbottommargin=2mm, leftmargin=-1mm, rightmargin=-1mm]{lstlistinglike}
-
 \AtBeginSection[]
 {
   \begin{frame}
@@ -58,6 +23,16 @@
     \tableofcontents[currentsection]
   \end{frame}
 }
+\usepackage[parfill]{parskip}
+\usepackage{color}
+\usepackage[linewidth=0.5pt]{mdframed}
+\newmdenv[innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=-1mm, innerbottommargin=2mm, leftmargin=-1mm, rightmargin=-1mm]{lstlistinglike}
+\usepackage{tikz}
+\usepackage{graphicx}
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+\hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
+\title{Scala Macros}
 
 \begin{document}
 
@@ -72,5 +47,100 @@
   \titlepage
 \end{frame}
 }
+
+\begin{frame}[fragile]
+\frametitle{Macros}
+\pause
+Macros realize the notion of textual abstraction.
+
+\pause
+Textual abstraction:
+\begin{itemize}
+\item Recognize pieces of text that match a specification
+\item Replace them according to a procedure
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example}
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(let (x 42) (print x))
+
+
+
+
+
+
+
+
+((lambda (x) (print x)) 42)
+\end{semiverbatim}
+\end{lstlistinglike}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example}
+\begin{lstlistinglike}
+\begin{semiverbatim}
+(let (\text{\color{red}{x}} \text{\color{teal}{42}}) \text{\color{violet}{(print x)}})
+
+(defmacro let args
+  (cons
+   (cons \text{\color{blue}{'lambda}}
+         (cons (list \text{\color{red}{(caar args)}})
+               \text{\color{violet}{(cdr args)}}))
+   \text{\color{teal}{(cdar args)}}))
+
+((\text{\color{blue}{lambda}} (\text{\color{red}{x}}) \text{\color{violet}{(print x)}}) \text{\color{teal}{42}})
+\end{semiverbatim}
+\end{lstlistinglike}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Why macros?}
+\begin{itemize}
+\item Deeply embedded DSLs (database access, testing)
+\item Optimization (programmable inlining, fusion)
+\item Analysis (integrated proof-checker)
+\item Effects (effect containment and propagation)
+\item ...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Today's talk}
+
+Macrology is vast:
+\begin{itemize}
+\item Notation
+\item Variable capture
+\item Typechecking meta-programs
+\item Syntax extensibility
+\item ...
+\end{itemize}
+
+\pause
+Surveyed papers are versatile as well.
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Today's talk}
+
+Going into all the details is a genuine pleasure
+% and I would invite you to share this pleasure with me during the second part of the oral exam.
+
+But instead let me tell you a story
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Alexandre Dumas}
+
+\begin{center}
+\includegraphics[width=5.5cm]{dumas}
+\end{center}
+\end{frame}
+
+\section{The story of bindings}
 
 \end{document}
