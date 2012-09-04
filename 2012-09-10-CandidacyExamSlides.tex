@@ -426,17 +426,42 @@ The \texttt{aif} macro has two bugs
 \section{The trilogy of tongues}
 
 \begin{frame}[fragile]
-\frametitle{Old school}
+\frametitle{Template Haskell}
 \begin{semiverbatim}
-(defmacro+ aif
-  (aif cond then else)
-  \visible<2>{\alert{(let ((temp (gensym)))}}
-    (let* ((temp cond)
-           (it temp))
-      (if temp then else)))\visible<2>{\alert{)}}
-\end{semiverbatim}
+\visible<2->{$(aif [| calculate |]}
+  \visible<2->{[| putStrLn (show it) |]}
+  \visible<2->{[| error "does not compute" |])}
 
-\visible<2>{And please don't rename core forms}
+aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
+aif if' then' else' =
+  [| let temp = $if'
+         it = temp
+     in if temp /= 0 then $then' else $else' |]
+
+\visible<3->{let temp_a1mx = calculate}
+    \visible<3->{\text{\color{red}{it_a1my}} = temp_a1mx}
+\visible<3->{in if (temp_a1mx /= 0)}
+   \visible<3->{then putStrLn (show \text{\color{red}{it}})}
+   \visible<3->{else error "does not compute"}
+
+\visible<3->{\text{\color{red}{Not in scope: `it'}}}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The \texttt{Q} monad}
+\begin{semiverbatim}
+aif if' then' else' =
+  [| let temp = $if'
+         it = temp
+     in if temp /= 0 then $then' else $else' |]
+
+aif' if' then' else' =
+  do \{ temp <- newName "temp"
+     ; it <- newName "it"
+     ; return ...
+     \}
+\end{semiverbatim}
 \end{frame}
 
 \section{The vision of the days to come}

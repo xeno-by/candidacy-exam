@@ -1,1 +1,1 @@
-@ghc --make -XTemplateHaskell main.hs -o main.exe
+@ghc --make -XTemplateHaskell -ddump-splices main.hs -o main.exe
