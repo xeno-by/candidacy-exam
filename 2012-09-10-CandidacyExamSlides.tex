@@ -425,6 +425,20 @@ The \texttt{aif} macro has two bugs
 
 \section{The trilogy of tongues}
 
+\begin{frame}[fragile]
+\frametitle{Old school}
+\begin{semiverbatim}
+(defmacro+ aif
+  (aif cond then else)
+  \visible<2>{\alert{(let ((temp (gensym)))}}
+    (let* ((temp cond)
+           (it temp))
+      (if temp then else)))\visible<2>{\alert{)}}
+\end{semiverbatim}
+
+\visible<2>{And please don't rename core forms}
+\end{frame}
+
 \section{The vision of the days to come}
 
 \end{document}

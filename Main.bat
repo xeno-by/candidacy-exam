@@ -1,0 +1,1 @@
+@ghc --make -XTemplateHaskell main.hs -o main.exe
