@@ -30,6 +30,7 @@
 \usepackage{tikz}
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
+\usepackage{textcomp}
 
 \hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
 \title{Scala Macros}
@@ -262,14 +263,13 @@ But instead let me tell you a story.
   (print it)
   (error "does not compute"))
 
-(defmacro      aif args
+(defmacro  aif args
 
-
-    `(let* ((temp ,(car args))
-            (it temp))
-       (if temp
-           ,(cadr args)
-           ,(caddr args))))
+ `(let* ((temp ,(car args))
+         (it temp))
+    (if temp
+        ,(cadr args)
+        ,(caddr args))))
 
 (let* ((temp (calculate))
        (it temp))
@@ -286,14 +286,13 @@ But instead let me tell you a story.
   (print it)
   (error "does not compute"))
 
-(define-syntax aif
-  (syntax-rules ()
-    (\alert{(aif cond then else)}
-     (let* ((temp \alert{cond})
-            (it temp))
-       (if temp
-           \alert{then}
-           \alert{else})))))
+(defmacro+ aif
+  \alert{(aif cond then else)}
+  (let* ((temp \alert{cond})
+         (it temp))
+    (if temp
+        \alert{then}
+        \alert{else})))
 
 (let* ((temp (calculate))
        (it temp))
@@ -312,6 +311,117 @@ But instead let me tell you a story.
 \end{frame}
 
 \section{The tale of bindings}
+
+\begin{frame}[fragile]
+\frametitle{Anaphoric \texttt{if}}
+\begin{semiverbatim}
+(defmacro+ aif
+  (aif cond then else)
+  (let* ((temp cond)
+         (it temp))
+    (if temp then else)))
+\end{semiverbatim}
+
+\begin{itemize}
+\item So far macros are simple: define a function, recognize pieces of text and replace them with a template
+\item This is so immediately useful, that we could wrap up right now
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{But actually}
+The \texttt{aif} macro has two bugs
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{What's wrong?}
+\begin{semiverbatim}
+\visible<2->{\text{\color<3->{blue}{(aif (calculate)}}}
+\visible<2->{  \text{\color<3->{blue}{(print it)}}}
+  \visible<2->{\text{\color<3->{blue}{(error "does not compute"))}}}
+
+(defmacro+ aif
+  (aif cond then else)
+  \text{\color<3->{red}{(let* ((temp cond)}}
+         \text{\color<3->{red}{(it temp))}}
+    \text{\color<3->{red}{(if temp then else))}})
+
+\visible<4->{\text{\color<4->{red}{(let* ((temp \text{\color<4->{blue}{(calculate)}})}}}
+       \visible<4->{\text{\color<4->{red}{(it temp))}}}
+  \visible<4->{\text{\color<4->{red}{(if temp}}}
+    \visible<4->{\text{\color<4->{blue}{(print it)}}}
+    \visible<4->{\text{\color<4->{blue}{(error "does not compute")}}\text{\color<4->{red}{))}}}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bug \#1: Violation of hygiene}
+\begin{semiverbatim}
+(let ((\text{\color{blue}{temp}} 451{\textdegree}F))
+  (aif (calculate)
+    (print it)
+    (print \text{\color{blue}{temp}})))
+
+(defmacro+ aif
+  (aif cond then else)
+  (let* ((\text{\color{red}{temp}} cond)
+         (it temp))
+    (if temp then \text{\color{red}{else}})))
+
+(let ((\text{\color{blue}{temp}} 451{\textdegree}F))
+  (let* ((\text{\color{red}{temp}} (calculate))
+         (it temp))
+    (if temp
+      (print it)
+      (print \text{\color{red}{temp}}))))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Bug \#2: Violation of referential transparency}
+\begin{semiverbatim}
+(let ((\text{\color{blue}{if}} hijacked))
+  (aif (calculate)
+    (print it)
+    (error "does not compute")))
+
+(defmacro+ aif
+  (aif cond then else)
+  (let* ((temp cond)
+         (it temp))
+    (\text{\color{red}{if}} temp then else)))
+
+(let ((\text{\color{blue}{if}} hijacked))
+  (let* ((temp (calculate))
+         (it temp))
+    (\text{\color{blue}{if}} temp
+      (print it)
+      (error "does not compute"))))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Old school}
+\begin{semiverbatim}
+(defmacro+ aif
+  (aif cond then else)
+  \visible<2>{\alert{(let ((temp (gensym)))}}
+    (let* ((temp cond)
+           (it temp))
+      (if temp then else)))\visible<2>{\alert{)}}
+\end{semiverbatim}
+
+\visible<2>{And please don't rename core forms}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Interlude}
+\begin{itemize}
+\item Cross-pollination of scopes can lead to inadvertent variable capture
+\item Violation of hygiene = def site harms call site
+\item Violation of referential transparency = call site harms def site
+\end{itemize}
+\end{frame}
 
 \section{The trilogy of tongues}
 
