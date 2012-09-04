@@ -33,9 +33,17 @@ using System;
 //   <[ 2 + true ]>
 // }
 
-macro my(name, expr, body) {
+// macro my(name, expr, body) {
+//   <[
+//     def $name = $expr;
+//     try { $body } finally { $name.Dispose() }
+//   ]>
+// }
+
+macro aif(cond, then, else_) {
   <[
-    def $name = $expr;
-    try { $body } finally { $name.Dispose() }
+    def temp = $cond;
+    def $("it": usesite) = temp;
+    if (temp != 0) $then else $else_
   ]>
 }

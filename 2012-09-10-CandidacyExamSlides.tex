@@ -428,15 +428,15 @@ The \texttt{aif} macro has two bugs
 \begin{frame}[fragile]
 \frametitle{Template Haskell}
 \begin{semiverbatim}
-\visible<2->{$(aif [| calculate |]}
+\visible<2->{{\textdollar}(aif [| calculate |]}
   \visible<2->{[| putStrLn (show it) |]}
   \visible<2->{[| error "does not compute" |])}
 
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
-aif if' then' else' =
-  [| let temp = $if'
+aif cond then' else' =
+  [| let temp = {\textdollar}cond
          it = temp
-     in if temp /= 0 then $then' else $else' |]
+     in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
 
 \visible<3->{let temp_a1mx = calculate}
     \visible<3->{\text{\color{red}{it_a1my}} = temp_a1mx}
@@ -451,21 +451,21 @@ aif if' then' else' =
 \begin{frame}[fragile]
 \frametitle{The \texttt{Q} monad}
 \begin{semiverbatim}
-aif if' then' else' =
-  [| let \text{\color<2->{blue}{temp = $if'}}
+aif cond then' else' =
+  [| let \text{\color<2->{blue}{temp = {\textdollar}cond}}
          \text{\color<2->{blue}{it = temp}}
-     in if temp \text{\color<2->{red}{/=}} 0 then $then' else $else' |]
+     in if temp \text{\color<2->{red}{/=}} 0 then {\textdollar}then' else {\textdollar}else' |]
 
 \visible<2>{aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp}
-\visible<2>{aif if'' then'' else'' =}
+\visible<2>{aif cond' then'' else'' =}
     \visible<2>{do \{ \text{\color{blue}{temp <- newName "temp"}}}
        \visible<2>{; \text{\color{blue}{it <- newName "it"}}}
-       \visible<2>{; if' <- if''}
+       \visible<2>{; cond <- cond'}
        \visible<2>{; then' <- then''}
        \visible<2>{; else' <- else''}
        \visible<2>{; \text{\color{red}{let notEq = mkNameG_v "ghc-prim" "GHC.Classes" "/="}}}
          \visible<2>{in return}
-          \visible<2>{(LetE [ValD (VarP temp) (NormalB if') [],}
+          \visible<2>{(LetE [ValD (VarP temp) (NormalB cond) [],}
                  \visible<2>{ValD (VarP it) (NormalB (VarE temp)) []]}
                 \visible<2>{(CondE (... (VarE notEq) ...) then' else'))}
        \visible<2>{\}}
@@ -477,24 +477,86 @@ aif if' then' else' =
 \begin{frame}[fragile]
 \frametitle{Perils of hygiene}
 \begin{semiverbatim}
-$(aif [| calculate |]
-  [| putStrLn (show \alert{$(dyn "it")}) |]
+{\textdollar}(aif [| calculate |]
+  [| putStrLn (show \alert{{\textdollar}(dyn "it")}) |]
   [| error "does not compute" |])
 
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
-aif if' then' else' =
-  [| let temp = $if'
+aif cond then' else' =
+  [| let temp = {\textdollar}cond
          it = temp
-     in if temp /= 0 then $then' else $else' |]
+     in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Summary: Template Haskell}
 \begin{itemize}
-\item Quasiquotes in Template Haskell are automatically hygienic
-\item They are translated into Q monad, which takes care of \texttt{gensym}ming
+\item Quasiquotes in Template Haskell are automatically hygienic and referentially transparent
+\item That's because are translated into Q monad, which takes care of \texttt{gensym}ming and fully qualified names
 \item When hygiene fails, we are forced to drop to low level
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Nemerle}
+\begin{semiverbatim}
+\visible<2->{aif(calculate,}
+  \visible<2->{WriteLine(it),}
+  \visible<2->{throw Exception("does not compute"))}
+
+macro aif(cond, then, else_) \{
+  <[
+    def temp = {\textdollar}cond;
+    def it = temp;
+    if (temp != 0) {\textdollar}then else {\textdollar}else_
+  ]>
+\}
+
+\visible<3->{def calculate = 42;}
+\visible<3->{def temp_1087 = calculate;}
+\visible<3->{def \text{\color{red}{it_1088}} = temp_1087;}
+\visible<3->{if (temp_1087 != 0) WriteLine(\text{\color{red}{it}}) else throw Exception("...")}
+
+\visible<3->{\text{\color{red}{error: unbound name `it'}}}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle<1>{Coloring algorithm}
+\frametitle<2>{Coloring algorithm: normal code gets a vanilla color}
+\frametitle<3>{Coloring algorithm: each expansion gets unique colors}
+\frametitle<4>{Coloring algorithm: at the end of the day}
+\frametitle<5>{Coloring algorithm: inherit use site}
+\frametitle<6>{Coloring algorithm: polychromatic}
+\begin{semiverbatim}
+def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
+aif(\text{\color<2-4>{blue}{calculate}},
+  WriteLine(\text{\color<2-4>{blue}{it}}),
+  throw Exception("does not compute"))
+
+macro aif(cond, then, else_) \{      \only<3->{\text{\color{red}{// expansion color}}}
+  <[
+    def \text{\color<3-4>{red}{temp}} = \text{\color<3-4>{blue}{{\textdollar}cond}};
+    def \only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}}\only<6>{\text{\color{blue}{{\textdollar}}\color{red}{(}\color{blue}{"}\color{red}{i}\color{blue}{t}"\color{blue}{:} \color{red}{d}\color{blue}{y}\color{red}{n}\color{blue}{)}}} = \text{\color<3-4>{red}{temp}};
+    if (\text{\color<3-4>{red}{temp}} != 0) \text{\color<3-4>{blue}{{\textdollar}then}} else \text{\color<3-4>{blue}{{\textdollar}else_}}
+  ]>
+\}
+
+def \text{\color<4-4>{blue}{calculate}} = 42;
+def \text{\color<4-4>{red}{temp}} = \text{\color<4-4>{blue}{calculate}};
+def \text{\color<4>{red}{\color<5>{blue}{\color<6>{red}{i}\color<6>{blue}{t}}}} = \text{\color<4-4>{red}{temp}};
+if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) else throw Exception("...")
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary: Nemerle}
+\begin{itemize}
+\item Nemerle takes care of hygiene with a coloring algorithm of impressive simplicity and power
+\item No complex translation algorithms are necessary
+\item As another bonus programmer can fine-tune colors with \texttt{MacroColors}
+\item Referential transparency works as well
 \end{itemize}
 \end{frame}
 

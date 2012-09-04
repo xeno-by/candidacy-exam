@@ -10,16 +10,19 @@ using System.Console;
 
 // bar({WriteLine("from outside: " + x);})
 
-class Database {
-  public this(s: String) {
-    WriteLine("constructed")
-  }
-  public Dispose(): void {
-    WriteLine("disposed")
-  }
-  public LoadData(): void {
-    WriteLine("loaded")
-  }
-}
+// class Database {
+//   public this(s: String) {
+//     WriteLine("constructed")
+//   }
+//   public Dispose(): void {
+//     WriteLine("disposed")
+//   }
+//   public LoadData(): void {
+//     WriteLine("loaded")
+//   }
+// }
 
-my(db, Database("localhost"), db.LoadData())
+// my(db, Database("localhost"), db.LoadData())
+
+def calculate = 42;
+aif(calculate, WriteLine(it), throw Exception("does not compute"))
