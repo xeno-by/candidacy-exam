@@ -560,6 +560,40 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Racket}
+A Lisp, descendent from Scheme
+
+25 years of hygienic macros, a bunch of macro systems
+
+Language features written using macros (classes, modules, etc)
+
+Q: "How to turn macros into proper abstractions?"
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Racket}
+\begin{semiverbatim}
+\visible<2->{\text{\color<3->{blue}{(aif (calculate)}}}
+  \visible<2->{\text{\color<3->{blue}{(print it)}}}
+  \visible<2->{\text{\color<3->{blue}{(error "does not compute"))}}}
+
+(define-syntax (aif stx)
+  (syntax-case stx ()
+    ((aif cond then else)
+     \visible<4->{(with-syntax ((\text{\color<4->{blue}{it}} (datum->syntax \text{\color<4->{blue}{#'aif}} \text{\color<4->{red}{'it}})))}
+       #'(let ((temp cond)
+               (\text{\color<4->{blue}{\color<3>{red}{it}}} test)))
+           (if \text{\color<4->{blue}{\color<3>{red}{it}}} then else)))))\visible<4->{)}
+
+\visible<3->{(let* ((temp (calculate))}
+       \visible<3->{(\text{\color<4->{blue}{\color<3>{red}{it}}} temp))}
+  \visible<3->{(if temp}
+    \visible<3->{\text{\color<3->{blue}{(print it)}}}
+    \visible<3->{\text{\color<3->{blue}{(error "does not compute")}}))}
+\end{semiverbatim}
+\end{frame}
+
 \section{The vision of the days to come}
 
 \end{document}
