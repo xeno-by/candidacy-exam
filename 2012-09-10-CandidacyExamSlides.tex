@@ -429,19 +429,19 @@ The \texttt{aif} macro has two bugs
 \frametitle{Template Haskell}
 \begin{semiverbatim}
 \visible<2->{{\textdollar}(aif [| calculate |]}
-  \visible<2->{[| putStrLn (show it) |]}
+  \visible<2->{[| putStrLn (show \text{\color<3->{blue}{it}}) |]}
   \visible<2->{[| error "does not compute" |])}
 
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
 aif cond then' else' =
   [| let temp = {\textdollar}cond
-         it = temp
+         \text{\color<3->{red}{it}} = temp
      in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
 
 \visible<3->{let temp_a1mx = calculate}
     \visible<3->{\text{\color{red}{it_a1my}} = temp_a1mx}
 \visible<3->{in if (temp_a1mx /= 0)}
-   \visible<3->{then putStrLn (show \text{\color{red}{it}})}
+   \visible<3->{then putStrLn (show \text{\color{blue}{it}})}
    \visible<3->{else error "does not compute"}
 
 \visible<3->{\text{\color{red}{Not in scope: `it'}}}
@@ -502,13 +502,13 @@ aif cond then' else' =
 \frametitle{Nemerle}
 \begin{semiverbatim}
 \visible<2->{aif(calculate,}
-  \visible<2->{WriteLine(it),}
+  \visible<2->{WriteLine(\text{\color<3->{blue}{it}}),}
   \visible<2->{throw Exception("does not compute"))}
 
 macro aif(cond, then, else_) \{
   <[
     def temp = {\textdollar}cond;
-    def it = temp;
+    def \text{\color<3->{red}{it}} = temp;
     if (temp != 0) {\textdollar}then else {\textdollar}else_
   ]>
 \}
@@ -516,7 +516,7 @@ macro aif(cond, then, else_) \{
 \visible<3->{def calculate = 42;}
 \visible<3->{def temp_1087 = calculate;}
 \visible<3->{def \text{\color{red}{it_1088}} = temp_1087;}
-\visible<3->{if (temp_1087 != 0) WriteLine(\text{\color{red}{it}}) else throw Exception("...")}
+\visible<3->{if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...")}
 
 \visible<3->{\text{\color{red}{error: unbound name `it'}}}
 \end{semiverbatim}
@@ -538,12 +538,12 @@ aif(\text{\color<2-4>{blue}{calculate}},
 macro aif(cond, then, else_) \{      \only<3->{\text{\color{red}{// expansion color}}}
   <[
     def \text{\color<3-4>{red}{temp}} = \text{\color<3-4>{blue}{{\textdollar}cond}};
-    def \only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}}\only<6>{\text{\color{blue}{{\textdollar}}\color{red}{(}\color{blue}{"}\color{red}{i}\color{blue}{t}"\color{blue}{:} \color{red}{d}\color{blue}{y}\color{red}{n}\color{blue}{)}}} = \text{\color<3-4>{red}{temp}};
+    def \only<1,2>{it}\only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}}\only<6>{\text{\color{blue}{{\textdollar}}\color{red}{(}\color{blue}{"}\color{red}{i}\color{blue}{t}"\color{blue}{:} \color{red}{d}\color{blue}{y}\color{red}{n}\color{blue}{)}}} = \text{\color<3-4>{red}{temp}};
     if (\text{\color<3-4>{red}{temp}} != 0) \text{\color<3-4>{blue}{{\textdollar}then}} else \text{\color<3-4>{blue}{{\textdollar}else_}}
   ]>
 \}
 
-def \text{\color<4-4>{blue}{calculate}} = 42;
+def \text{\color<4-4>{blue}{calculate}} = 42;                 \only<4->{// bind using colors}
 def \text{\color<4-4>{red}{temp}} = \text{\color<4-4>{blue}{calculate}};
 def \text{\color<4>{red}{\color<5>{blue}{\color<6>{red}{i}\color<6>{blue}{t}}}} = \text{\color<4-4>{red}{temp}};
 if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) else throw Exception("...")
@@ -583,8 +583,8 @@ Q: "How to turn macros into proper abstractions?"
     ((aif cond then else)
      \visible<4->{(with-syntax ((\text{\color<4->{blue}{it}} (datum->syntax \text{\color<4->{blue}{#'aif}} \text{\color<4->{red}{'it}})))}
        #'(let ((temp cond)
-               (\text{\color<4->{blue}{\color<3>{red}{it}}} test)))
-           (if \text{\color<4->{blue}{\color<3>{red}{it}}} then else)))))\visible<4->{)}
+               (\text{\color<4->{blue}{\color<3>{red}{it}}} temp)))
+           (if temp then else)))))\visible<4->{)}
 
 \visible<3->{(let* ((temp (calculate))}
        \visible<3->{(\text{\color<4->{blue}{\color<3>{red}{it}}} temp))}
@@ -592,6 +592,52 @@ Q: "How to turn macros into proper abstractions?"
     \visible<3->{\text{\color<3->{blue}{(print it)}}}
     \visible<3->{\text{\color<3->{blue}{(error "does not compute")}}))}
 \end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Doesn't scale}
+\begin{semiverbatim}
+\visible<2->{\text{\color<5->{teal}{(aunless (not (calculate))}}}
+  \visible<2->{\text{\color<5->{teal}{(print it)}}}
+  \visible<2->{\text{\color<5->{teal}{(error "does not compute"))}}}
+
+(define-syntax (aunless stx)
+  (syntax-case stx ()
+    ((aunless cond then else)
+     \text{\color<4->{blue}{#'(aif (not cond) then else)}})))
+
+\visible<3->{\text{\color<4->{red}{(let* ((temp (not (not (calculate))))}}}
+       \visible<3->{\text{\color<4->{red}{(}}\text{\color<4->{blue}{it}} \text{\color<4->{red}{temp))}}}
+  \visible<3->{\text{\color<4->{red}{(if temp}}}
+    \visible<3->{\text{\color<5->{teal}{(print it)}}}
+    \visible<3->{\text{\color<5->{teal}{(error "does not compute")}}))}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Solution: dynamic variables}
+\begin{semiverbatim}
+
+\visible<2->{\alert<2>{(define-syntax-parameter it (syntax-rules ()))}}
+
+(define-syntax (aif stx)
+  (syntax-case stx ()
+    ((aif cond then else)
+       #'(let ((temp cond)\visible<2>{)}
+           \only<1>{    (it temp))}\only<2->{\alert<2>{(syntax-parameterize}
+           \visible<2->{\alert<2>{((it (syntax-rules () ((_) temp))))}}}
+           \only<2>{  }(if temp then else)))))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary: overall}
+\begin{itemize}
+\item There are algorithms that take care of hygiene and referential transparency
+\item These algorithms can work in automatic mode, but are flexible enough to give the programmer full control
+\item Like a silver bullet
+\item Nevertheless sometimes even better solutions come from integration with language features
+\end{itemize}
 \end{frame}
 
 \section{The vision of the days to come}
