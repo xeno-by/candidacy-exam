@@ -642,4 +642,41 @@ Q: "How to turn macros into proper abstractions?"
 
 \section{The vision of the days to come}
 
+\begin{frame}[fragile]
+\frametitle{scalamacros.org}
+\begin{itemize}
+\item Since this semester Scala has macros
+\item Even better: macros are an official part of the language in the next production release 2.10.0
+\item Now it's time to put the pens down and think about the future
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Implicits}
+\begin{semiverbatim}
+\visible<2->{trait Serializer[T] \{
+  def write(pickle: Pickle, x: T): Unit
+\}
+}
+def serialize[T](x: T)\only<2->{(\only<3->{\alert<3-4>{implicit }}s: Serializer[T])}: Pickle
+
+\visible<4->{\only<1-4>{\alert<4>{implicit object ByteSerializer extends Serializer[Byte] \{
+  def write(pickle: Pickle, x: Byte) = pickle.writeByte(x)
+\}}}\only<5->{\visible<5->{\alert<5>{implicit def generator: Serializer[T] = macro impl[T]
+
+}}}}
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Research proposal}
+\begin{itemize}
+\item Macros + functions = programmable inlining, specialization, fusion
+\item Macros + annotations = code contracts
+\item Macros + path-dependent types = controlled effects
+\item Macros + implicits = theorem prover
+\item ...
+\end{itemize}
+\end{frame}
+
 \end{document}
