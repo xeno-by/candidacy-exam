@@ -220,7 +220,7 @@ But instead let me tell you a story.
   (error "does not compute"))
 
 (defmacro aif args
-  \alert{     `}(let*            ((temp  ..........)
+  \visible<2->{\alert{     `}}(let*            ((temp  ..........)
                           (it  temp))
           (if  temp
              ............
@@ -452,16 +452,50 @@ aif if' then' else' =
 \frametitle{The \texttt{Q} monad}
 \begin{semiverbatim}
 aif if' then' else' =
+  [| let \text{\color<2->{blue}{temp = $if'}}
+         \text{\color<2->{blue}{it = temp}}
+     in if temp \text{\color<2->{red}{/=}} 0 then $then' else $else' |]
+
+\visible<2>{aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp}
+\visible<2>{aif if'' then'' else'' =}
+    \visible<2>{do \{ \text{\color{blue}{temp <- newName "temp"}}}
+       \visible<2>{; \text{\color{blue}{it <- newName "it"}}}
+       \visible<2>{; if' <- if''}
+       \visible<2>{; then' <- then''}
+       \visible<2>{; else' <- else''}
+       \visible<2>{; \text{\color{red}{let notEq = mkNameG_v "ghc-prim" "GHC.Classes" "/="}}}
+         \visible<2>{in return}
+          \visible<2>{(LetE [ValD (VarP temp) (NormalB if') [],}
+                 \visible<2>{ValD (VarP it) (NormalB (VarE temp)) []]}
+                \visible<2>{(CondE (... (VarE notEq) ...) then' else'))}
+       \visible<2>{\}}
+
+\end{semiverbatim}
+                % (CondE (InfixE (Just (VarE temp)) (VarE notEq) (Just (LitE (IntegerL 0)))) then' else'))
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Perils of hygiene}
+\begin{semiverbatim}
+$(aif [| calculate |]
+  [| putStrLn (show \alert{$(dyn "it")}) |]
+  [| error "does not compute" |])
+
+aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
+aif if' then' else' =
   [| let temp = $if'
          it = temp
      in if temp /= 0 then $then' else $else' |]
-
-aif' if' then' else' =
-  do \{ temp <- newName "temp"
-     ; it <- newName "it"
-     ; return ...
-     \}
 \end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Summary: Template Haskell}
+\begin{itemize}
+\item Quasiquotes in Template Haskell are automatically hygienic
+\item They are translated into Q monad, which takes care of \texttt{gensym}ming
+\item When hygiene fails, we are forced to drop to low level
+\end{itemize}
 \end{frame}
 
 \section{The vision of the days to come}
