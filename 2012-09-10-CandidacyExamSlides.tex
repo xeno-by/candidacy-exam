@@ -54,7 +54,6 @@
 \pause
 Macros realize the notion of textual abstraction.
 
-\pause
 Textual abstraction:
 \begin{itemize}
 \item Recognize pieces of text that match a specification
@@ -79,18 +78,16 @@ Textual abstraction:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle<1>{Step 1. Recognize pieces of text}
-\frametitle<2>{Step 1. Recognize pieces of text}
-\frametitle<3>{Step 2. Replace them according to a procedure}
+\frametitle{Step 1. Recognize pieces of text}
 \begin{semiverbatim}
-(\only<1,3>{let}\only<2>{\text{\color{blue}{let}}} \only<1,3>{(x 42) (print x)}\only<2>{\text{\color{red}{(x 42) (print x)}}})
+(\text{\color{blue}{let}} \text{\color{red}{(x 42) (print x))}}
 
-(defmacro \only<1,3>{let}\only<2>{\text{\color{blue}{let}}} \only<1,3>{args}\only<2>{\text{\color{red}{args}}}
-  \visible<3->{(cons}
-   \visible<3->{(cons 'lambda}
-         \visible<3->{(cons (list (caar args))}
-               \visible<3->{(cdr args)))}
-   \visible<3->{(cdar args)))}
+(defmacro \text{\color{blue}{let}} \text{\color{red}{args}}
+
+
+
+
+
 
 ((lambda (x) (print x)) 42)
 \end{semiverbatim}
