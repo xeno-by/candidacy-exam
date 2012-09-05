@@ -587,11 +587,14 @@ def serialize[T](x: T)\only<2->{(\only<3->{\alert<3-4>{implicit }}s: Serializer[
 
 \begin{frame}[fragile]
 \frametitle{Research proposal}
+
+Marry macros and high-level language features:
+
 \begin{itemize}
 \item Macros + functions = programmable inlining, specialization, fusion
 \item Macros + annotations = code contracts
 \item Macros + path-dependent types = controlled effects
-\item Macros + implicits = theorem prover
+\item Macros + implicits = static verification
 \item ...
 \end{itemize}
 \end{frame}
