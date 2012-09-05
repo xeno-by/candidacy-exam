@@ -86,113 +86,25 @@ Textual abstraction:
 \frametitle<1>{\texttt{if} in Lisp}
 \frametitle<2>{Anaphoric \texttt{if}}
 \frametitle<3>{The \texttt{aif} macro}
-\frametitle<4->{Start with a notation}
+\frametitle<4>{Quasiquote}
+\frametitle<5>{Unquote}
 \begin{semiverbatim}
 (\only<2->{a}if (calculate)
   (print \only<1>{"success"}\only<2->{it})
   (error "does not compute"))
 
 \visible<3->{(defmacro aif args}
-        \visible<4->{(let*            ((temp  (car args))}
-        \visible<4->{                  (it  temp))}
+  \visible<4->{     \alert{`}(let*            ((temp \only<4>{...........}\only<5->{\alert{,(car args)}})}
+                          \visible<4->{(it  temp))}
           \visible<4->{(if  temp}
-             \visible<4->{(cadr args)}
-             \visible<4->{(caddr args))))}
+             \visible<4->{\only<4>{............}\only<5->{\alert{,(cadr args)}}}
+             \visible<4->{\only<4>{............}\only<5->{\alert{,(caddr args)}})))}
 
 \visible<2->{(let* ((temp (calculate))}
        \visible<2->{(it temp))}
   \visible<2->{(if temp}
     \visible<2->{(print it)}
     \visible<2->{(error "does not compute")))}
-\end{semiverbatim}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Surround it with parentheses}
-\begin{semiverbatim}
-(aif (calculate)
-  (print it)
-  (error "does not compute"))
-
-(defmacro aif args
-  \alert{(list '}let* \alert{(list (list '}temp  (car args))
-  \alert{                  (list '}it \alert{'}temp\alert{))}
-    \alert{(list '}if \alert{'}temp
-             (cadr args)
-             (caddr args)\alert{))})
-
-(let* ((temp (calculate))
-       (it temp))
-  (if temp
-    (print it)
-    (error "does not compute")))
-\end{semiverbatim}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Quasiquote}
-\begin{semiverbatim}
-(aif (calculate)
-  (print it)
-  (error "does not compute"))
-
-(defmacro aif args
-  \visible<2->{\alert{     `}}(let*            ((temp  ..........)
-                          (it  temp))
-          (if  temp
-             ............
-             ............)))
-
-(let* ((temp (calculate))
-       (it temp))
-  (if temp
-    (print it)
-    (error "does not compute")))
-\end{semiverbatim}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Unquote}
-\begin{semiverbatim}
-(aif (calculate)
-  (print it)
-  (error "does not compute"))
-
-(defmacro aif args
-  \alert{     `}(let*            ((temp \alert{,(car args)})
-                          (it  temp))
-          (if  temp
-            \alert{,(cadr args)}
-            \alert{,(caddr args)})))
-
-(let* ((temp (calculate))
-       (it temp))
-  (if temp
-    (print it)
-    (error "does not compute")))
-\end{semiverbatim}
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Unquote}
-\begin{semiverbatim}
-(aif (calculate)
-  (print it)
-  (error "does not compute"))
-
-(defmacro  aif args
-
- `(let* ((temp ,(car args))
-         (it temp))
-    (if temp
-        ,(cadr args)
-        ,(caddr args))))
-
-(let* ((temp (calculate))
-       (it temp))
-  (if temp
-    (print it)
-    (error "does not compute")))
 \end{semiverbatim}
 \end{frame}
 
