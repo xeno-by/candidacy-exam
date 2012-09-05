@@ -63,6 +63,11 @@ Textual abstraction:
 
 \begin{frame}[fragile]
 \frametitle{Why macros?}
+
+Work with syntax trees, therefore are not bound by the semantics of the underlying
+programming language
+
+Use cases:
 \begin{itemize}
 \item Deeply embedded DSLs (database access, testing)
 \item Optimization (programmable inlining, fusion)
@@ -143,7 +148,7 @@ Textual abstraction:
 \section{The tale of bindings}
 
 \begin{frame}[fragile]
-\frametitle{Anaphoric \texttt{if}}
+\frametitle{The \texttt{aif} macro}
 \begin{semiverbatim}
 (defmacro+ aif
   (aif cond then else)
