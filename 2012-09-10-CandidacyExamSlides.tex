@@ -156,31 +156,26 @@ Use cases:
 \end{itemize}
 \end{frame}
 
-\section{The tale of bindings}
+\section{The chapter of bindings}
 
 \begin{frame}[fragile]
-\frametitle{Actually}
-The \texttt{aif} macro has two bugs
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{What's wrong?}
+\frametitle{The \texttt{aif} macro is buggy}
 \begin{semiverbatim}
-\text{\color<2->{blue}{(aif (calculate)}}
-  \text{\color<2->{blue}{(print it)}}
-  \text{\color<2->{blue}{(error "does not compute"))}}
+\text{\color{blue}{(aif (calculate)}}
+  \text{\color{blue}{(print it)}}
+  \text{\color{blue}{(error "does not compute"))}}
 
 (defmacro+ aif
   (aif cond then else)
-  \text{\color<2->{red}{(let* ((temp cond)}}
-         \text{\color<2->{red}{(it temp))}}
-    \text{\color<2->{red}{(if temp then else))}})
+  \text{\color{red}{(let* ((temp cond)}}
+         \text{\color{red}{(it temp))}}
+    \text{\color{red}{(if temp then else))}})
 
-\visible<3->{\text{\color<3->{red}{(let* ((temp \text{\color<3->{blue}{(calculate)}})}}}
-       \visible<3->{\text{\color<3->{red}{(it temp))}}}
-  \visible<3->{\text{\color<3->{red}{(if temp}}}
-    \visible<3->{\text{\color<3->{blue}{(print it)}}}
-    \visible<3->{\text{\color<3->{blue}{(error "does not compute")}}\text{\color<3->{red}{))}}}
+\text{\color{red}{(let* ((temp \text{\color{blue}{(calculate)}})}}
+       \text{\color{red}{(it temp))}}
+  \text{\color{red}{(if temp}}
+    \text{\color{blue}{(print it)}}
+    \text{\color{blue}{(error "does not compute")}}\text{\color{red}{))}}
 \end{semiverbatim}
 \end{frame}
 
