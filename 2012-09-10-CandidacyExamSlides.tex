@@ -139,16 +139,7 @@ Use cases:
 
 \begin{frame}[fragile]
 \frametitle{Interlude}
-\begin{itemize}
-\item Macros are regular functions that happen to work with syntax objects
-\item Quasiquotes = static templates + dynamic holes
-\end{itemize}
-\end{frame}
 
-\section{The tale of bindings}
-
-\begin{frame}[fragile]
-\frametitle{The \texttt{aif} macro}
 \begin{semiverbatim}
 (defmacro+ aif
   (aif cond then else)
@@ -157,14 +148,18 @@ Use cases:
     (if temp then else)))
 \end{semiverbatim}
 
+\vskip50pt
+
 \begin{itemize}
-\item So far macros are simple: define a function, recognize pieces of text and replace them with a template
-\item This is so immediately useful, that we could wrap up right now
+\item Macros are functions that transform syntax objects
+\item Quasiquotes = static templates + dynamic holes
 \end{itemize}
 \end{frame}
 
+\section{The tale of bindings}
+
 \begin{frame}[fragile]
-\frametitle{But actually}
+\frametitle{Actually}
 The \texttt{aif} macro has two bugs
 \end{frame}
 
