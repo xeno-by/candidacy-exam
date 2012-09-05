@@ -88,8 +88,8 @@ Textual abstraction:
 \frametitle<3>{The \texttt{aif} macro}
 \frametitle<4->{Start with a notation}
 \begin{semiverbatim}
-(aif (calculate)
-  (print it)
+(\only<2->{a}if (calculate)
+  (print \only<1>{"success"}\only<2->{it})
   (error "does not compute"))
 
 \visible<3->{(defmacro aif args}
