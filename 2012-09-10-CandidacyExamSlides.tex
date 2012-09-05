@@ -84,26 +84,25 @@ Textual abstraction:
 
 \begin{frame}[fragile]
 \frametitle<1>{Anaphoric \texttt{if}}
-\frametitle<2>{Anaphoric \texttt{if}}
-\frametitle<3>{The \texttt{aif} macro}
-\frametitle<4->{Start with a notation}
+\frametitle<2>{The \texttt{aif} macro}
+\frametitle<3->{Start with a notation}
 \begin{semiverbatim}
 (aif (calculate)
   (print it)
   (error "does not compute"))
 
-\visible<3->{(defmacro aif args}
-        \visible<4->{(let*            ((temp  (car args))}
-        \visible<4->{                  (it  temp))}
-          \visible<4->{(if  temp}
-             \visible<4->{(cadr args)}
-             \visible<4->{(caddr args))))}
+\visible<2->{(defmacro aif args}
+        \visible<3->{(let*            ((temp  (car args))}
+        \visible<3->{                  (it  temp))}
+          \visible<3->{(if  temp}
+             \visible<3->{(cadr args)}
+             \visible<3->{(caddr args))))}
 
-\visible<2->{(let* ((temp (calculate))}
-       \visible<2->{(it temp))}
-  \visible<2->{(if temp}
-    \visible<2->{(print it)}
-    \visible<2->{(error "does not compute")))}
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
+    (print it)
+    (error "does not compute")))
 \end{semiverbatim}
 \end{frame}
 
@@ -253,21 +252,21 @@ The \texttt{aif} macro has two bugs
 \begin{frame}[fragile]
 \frametitle{What's wrong?}
 \begin{semiverbatim}
-\visible<2->{\text{\color<3->{blue}{(aif (calculate)}}}
-\visible<2->{  \text{\color<3->{blue}{(print it)}}}
-  \visible<2->{\text{\color<3->{blue}{(error "does not compute"))}}}
+\text{\color<2->{blue}{(aif (calculate)}}
+  \text{\color<2->{blue}{(print it)}}
+  \text{\color<2->{blue}{(error "does not compute"))}}
 
 (defmacro+ aif
   (aif cond then else)
-  \text{\color<3->{red}{(let* ((temp cond)}}
-         \text{\color<3->{red}{(it temp))}}
-    \text{\color<3->{red}{(if temp then else))}})
+  \text{\color<2->{red}{(let* ((temp cond)}}
+         \text{\color<2->{red}{(it temp))}}
+    \text{\color<2->{red}{(if temp then else))}})
 
-\visible<4->{\text{\color<4->{red}{(let* ((temp \text{\color<4->{blue}{(calculate)}})}}}
-       \visible<4->{\text{\color<4->{red}{(it temp))}}}
-  \visible<4->{\text{\color<4->{red}{(if temp}}}
-    \visible<4->{\text{\color<4->{blue}{(print it)}}}
-    \visible<4->{\text{\color<4->{blue}{(error "does not compute")}}\text{\color<4->{red}{))}}}
+\visible<3->{\text{\color<3->{red}{(let* ((temp \text{\color<3->{blue}{(calculate)}})}}}
+       \visible<3->{\text{\color<3->{red}{(it temp))}}}
+  \visible<3->{\text{\color<3->{red}{(if temp}}}
+    \visible<3->{\text{\color<3->{blue}{(print it)}}}
+    \visible<3->{\text{\color<3->{blue}{(error "does not compute")}}\text{\color<3->{red}{))}}}
 \end{semiverbatim}
 \end{frame}
 
@@ -318,20 +317,6 @@ The \texttt{aif} macro has two bugs
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Old school}
-\begin{semiverbatim}
-(defmacro+ aif
-  (aif cond then else)
-  \visible<2>{\alert{(let ((temp (gensym)))}}
-    (let* ((temp cond)
-           (it temp))
-      (if temp then else)))\visible<2>{\alert{)}}
-\end{semiverbatim}
-
-\visible<2>{And please don't rename core forms}
-\end{frame}
-
-\begin{frame}[fragile]
 \frametitle{Interlude}
 \begin{itemize}
 \item Cross-pollination of scopes can lead to inadvertent variable capture
@@ -345,23 +330,23 @@ The \texttt{aif} macro has two bugs
 \begin{frame}[fragile]
 \frametitle{Template Haskell}
 \begin{semiverbatim}
-\visible<2->{{\textdollar}(aif [| calculate |]}
-  \visible<2->{[| putStrLn (show \text{\color<3->{blue}{it}}) |]}
-  \visible<2->{[| error "does not compute" |])}
+{\textdollar}(aif [| calculate |]
+  [| putStrLn (show \text{\color<2->{blue}{it}}) |]
+  [| error "does not compute" |])
 
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
 aif cond then' else' =
   [| let temp = {\textdollar}cond
-         \text{\color<3->{red}{it}} = temp
+         \text{\color<2->{red}{it}} = temp
      in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
 
-\visible<3->{let temp_a1mx = calculate}
-    \visible<3->{\text{\color{red}{it_a1my}} = temp_a1mx}
-\visible<3->{in if (temp_a1mx /= 0)}
-   \visible<3->{then putStrLn (show \text{\color{blue}{it}})}
-   \visible<3->{else error "does not compute"}
+\visible<2->{let temp_a1mx = calculate}
+    \visible<2->{\text{\color{red}{it_a1my}} = temp_a1mx}
+\visible<2->{in if (temp_a1mx /= 0)}
+   \visible<2->{then putStrLn (show \text{\color{blue}{it}})}
+   \visible<2->{else error "does not compute"}
 
-\visible<3->{\text{\color{red}{Not in scope: `it'}}}
+\visible<2->{\text{\color{red}{Not in scope: `it'}}}
 \end{semiverbatim}
 \end{frame}
 
@@ -392,7 +377,7 @@ aif cond then' else' =
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Perils of hygiene}
+\frametitle{Breaking hygiene}
 \begin{semiverbatim}
 {\textdollar}(aif [| calculate |]
   [| putStrLn (show \alert{{\textdollar}(dyn "it")}) |]
@@ -401,8 +386,14 @@ aif cond then' else' =
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
 aif cond then' else' =
   [| let temp = {\textdollar}cond
-         it = temp
+         \text{\color{red}{it}} = temp
      in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
+
+let temp_a1mx = calculate
+    \text{\color{red}{it_a1my}} = temp_a1mx
+in if (temp_a1mx /= 0)
+   then putStrLn (show \text{\color{blue}{it_a1my}})
+   else error "does not compute"
 \end{semiverbatim}
 \end{frame}
 
@@ -410,32 +401,33 @@ aif cond then' else' =
 \frametitle{Summary: Template Haskell}
 \begin{itemize}
 \item Quasiquotes in Template Haskell are automatically hygienic and referentially transparent
-\item That's because are translated into Q monad, which takes care of \texttt{gensym}ming and fully qualified names
-\item When hygiene fails, we are forced to drop to low level
+\item That's because they are lifted into the Q monad, which takes care of names (fresh names for locals,
+fully qualified names for globals)
+\item Sometimes we need to break hygiene
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Nemerle}
 \begin{semiverbatim}
-\visible<2->{aif(calculate,}
-  \visible<2->{WriteLine(\text{\color<3->{blue}{it}}),}
-  \visible<2->{throw Exception("does not compute"))}
+aif(calculate,
+  WriteLine(\text{\color<2->{blue}{it}}),
+  throw Exception("does not compute"))
 
 macro aif(cond, then, else_) \{
   <[
     def temp = {\textdollar}cond;
-    def \text{\color<3->{red}{it}} = temp;
+    def \text{\color<2->{red}{it}} = temp;
     if (temp != 0) {\textdollar}then else {\textdollar}else_
   ]>
 \}
 
-\visible<3->{def calculate = 42;}
-\visible<3->{def temp_1087 = calculate;}
-\visible<3->{def \text{\color{red}{it_1088}} = temp_1087;}
-\visible<3->{if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...")}
+\visible<2->{def calculate = 42;}
+\visible<2->{def temp_1087 = calculate;}
+\visible<2->{def \text{\color{red}{it_1088}} = temp_1087;}
+\visible<2->{if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...")}
 
-\visible<3->{\text{\color{red}{error: unbound name `it'}}}
+\visible<2->{\text{\color{red}{error: unbound name `it'}}}
 \end{semiverbatim}
 \end{frame}
 
@@ -445,7 +437,6 @@ macro aif(cond, then, else_) \{
 \frametitle<3>{Coloring algorithm: each expansion gets unique colors}
 \frametitle<4>{Coloring algorithm: at the end of the day}
 \frametitle<5>{Coloring algorithm: inherit use site}
-\frametitle<6>{Coloring algorithm: polychromatic}
 \begin{semiverbatim}
 def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
 aif(\text{\color<2-4>{blue}{calculate}},
@@ -455,14 +446,14 @@ aif(\text{\color<2-4>{blue}{calculate}},
 macro aif(cond, then, else_) \{      \only<3->{\text{\color{red}{// expansion color}}}
   <[
     def \text{\color<3-4>{red}{temp}} = \text{\color<3-4>{blue}{{\textdollar}cond}};
-    def \only<1,2>{it}\only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}}\only<6>{\text{\color{blue}{{\textdollar}}\color{red}{(}\color{blue}{"}\color{red}{i}\color{blue}{t}"\color{blue}{:} \color{red}{d}\color{blue}{y}\color{red}{n}\color{blue}{)}}} = \text{\color<3-4>{red}{temp}};
+    def \only<1,2>{it}\only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}} = \text{\color<3-4>{red}{temp}};
     if (\text{\color<3-4>{red}{temp}} != 0) \text{\color<3-4>{blue}{{\textdollar}then}} else \text{\color<3-4>{blue}{{\textdollar}else_}}
   ]>
 \}
 
 def \text{\color<4-4>{blue}{calculate}} = 42;                 \only<4->{// bind using colors}
 def \text{\color<4-4>{red}{temp}} = \text{\color<4-4>{blue}{calculate}};
-def \text{\color<4>{red}{\color<5>{blue}{\color<6>{red}{i}\color<6>{blue}{t}}}} = \text{\color<4-4>{red}{temp}};
+def \text{\color<4>{red}{\color<5>{blue}{it}}} = \text{\color<4-4>{red}{temp}};
 if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) else throw Exception("...")
 \end{semiverbatim}
 \end{frame}
@@ -491,43 +482,43 @@ Q: "How to turn macros into proper abstractions?"
 \begin{frame}[fragile]
 \frametitle{Racket}
 \begin{semiverbatim}
-\visible<2->{\text{\color<3->{blue}{(aif (calculate)}}}
-  \visible<2->{\text{\color<3->{blue}{(print it)}}}
-  \visible<2->{\text{\color<3->{blue}{(error "does not compute"))}}}
+\text{\color<2->{blue}{(aif (calculate)}}
+  \text{\color<2->{blue}{(print it)}}
+  \text{\color<2->{blue}{(error "does not compute"))}}
 
 (define-syntax (aif stx)
   (syntax-case stx ()
     ((aif cond then else)
-     \visible<4->{(with-syntax ((\text{\color<4->{blue}{it}} (datum->syntax \text{\color<4->{blue}{#'aif}} \text{\color<4->{red}{'it}})))}
+     \visible<3->{(with-syntax ((\text{\color<3->{blue}{it}} (datum->syntax \text{\color<3->{blue}{#'aif}} \text{\color<3->{red}{'it}})))}
        #'(let ((temp cond)
-               (\text{\color<4->{blue}{\color<3>{red}{it}}} temp)))
-           (if temp then else)))))\visible<4->{)}
+               (\text{\color<3->{blue}{\color<2>{red}{it}}} temp)))
+           (if temp then else)))))\visible<3->{)}
 
-\visible<3->{(let* ((temp (calculate))}
-       \visible<3->{(\text{\color<4->{blue}{\color<3>{red}{it}}} temp))}
-  \visible<3->{(if temp}
-    \visible<3->{\text{\color<3->{blue}{(print it)}}}
-    \visible<3->{\text{\color<3->{blue}{(error "does not compute")}}))}
+\visible<2->{(let* ((temp (calculate))}
+       \visible<2->{(\text{\color<3->{blue}{\color<2>{red}{it}}} temp))}
+  \visible<2->{(if temp}
+    \visible<2->{\text{\color<2->{blue}{(print it)}}}
+    \visible<2->{\text{\color<2->{blue}{(error "does not compute")}}))}
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Doesn't scale}
 \begin{semiverbatim}
-\visible<2->{\text{\color<5->{teal}{(aunless (not (calculate))}}}
-  \visible<2->{\text{\color<5->{teal}{(print it)}}}
-  \visible<2->{\text{\color<5->{teal}{(error "does not compute"))}}}
+\text{\color<3->{teal}{(aunless (not (calculate))}}
+  \text{\color<3->{teal}{(print it)}}
+  \text{\color<3->{teal}{(error "does not compute"))}}
 
 (define-syntax (aunless stx)
   (syntax-case stx ()
     ((aunless cond then else)
-     \text{\color<4->{blue}{#'(aif (not cond) then else)}})))
+     \text{\color<2->{blue}{#'(aif (not cond) then else)}})))
 
-\visible<3->{\text{\color<4->{red}{(let* ((temp (not (not (calculate))))}}}
-       \visible<3->{\text{\color<4->{red}{(}}\text{\color<4->{blue}{it}} \text{\color<4->{red}{temp))}}}
-  \visible<3->{\text{\color<4->{red}{(if temp}}}
-    \visible<3->{\text{\color<5->{teal}{(print it)}}}
-    \visible<3->{\text{\color<5->{teal}{(error "does not compute")}}))}
+\text{\color<2->{red}{(let* ((temp (not (not (calculate))))}}
+       \text{\color<2->{red}{(}}\text{\color<2->{blue}{it}} \text{\color<2->{red}{temp))}}
+  \text{\color<2->{red}{(if temp}}
+    \text{\color<3->{teal}{(print it)}}
+    \text{\color<3->{teal}{(error "does not compute")}}))
 \end{semiverbatim}
 \end{frame}
 
@@ -535,15 +526,15 @@ Q: "How to turn macros into proper abstractions?"
 \frametitle{Solution: dynamic variables}
 \begin{semiverbatim}
 
-\visible<2->{\alert<2>{(define-syntax-parameter it (syntax-rules ()))}}
+\alert{(define-syntax-parameter it (syntax-rules ()))}
 
 (define-syntax (aif stx)
   (syntax-case stx ()
     ((aif cond then else)
-       #'(let ((temp cond)\visible<2>{)}
-           \only<1>{    (it temp))}\only<2->{\alert<2>{(syntax-parameterize}
-           \visible<2->{\alert<2>{((it (syntax-rules () ((_) temp))))}}}
-           \only<2>{  }(if temp then else)))))
+     #'(let ((temp cond))
+         \alert{(syntax-parameterize}
+         \alert{((it (syntax-rules () ((_) temp))))}
+           (if temp then else))))))
 \end{semiverbatim}
 \end{frame}
 
@@ -575,11 +566,11 @@ Q: "How to turn macros into proper abstractions?"
   def write(pickle: Pickle, x: T): Unit
 \}
 }
-def serialize[T](x: T)\only<2->{(\only<3->{\alert<3-4>{implicit }}s: Serializer[T])}: Pickle
+def serialize[T](x: T)\only<2->{(\only<3->{\alert<3>{implicit }}s: Serializer[T])}: Pickle
 
-\visible<4->{\only<1-4>{\alert<4>{implicit object ByteSerializer extends Serializer[Byte] \{
+\visible<3->{\only<1-3>{\alert<3>{implicit object ByteSerializer extends Serializer[Byte] \{
   def write(pickle: Pickle, x: Byte) = pickle.writeByte(x)
-\}}}\only<5->{\visible<5->{\alert<5>{implicit def generator: Serializer[T] = macro impl[T]
+\}}}\only<4->{\visible<4->{\alert<4>{implicit def generator: Serializer[T] = macro impl[T]
 
 }}}}
 \end{semiverbatim}
