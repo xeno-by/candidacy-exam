@@ -225,6 +225,20 @@ Use cases:
 \end{semiverbatim}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Old school}
+\begin{semiverbatim}
+(defmacro+ aif
+  (aif cond then else)
+  \alert{(let ((temp (gensym)))}
+    (let* ((temp cond)
+           (it temp))
+      (if temp then else))))
+\end{semiverbatim}
+
+And please don't rename core forms
+\end{frame}
+
 \section{The trilogy of tongues}
 
 \begin{frame}[fragile]
