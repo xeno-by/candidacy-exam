@@ -53,11 +53,11 @@ Macros in programming languages:
 \end{itemize}
 
 \vskip25pt
-What is the underlying concept?
+What is the underlying notion?
 \vskip25pt
 \pause
 
-Macros realize the notion of textual abstraction:
+The notion of textual abstraction:
 \begin{itemize}
 \item Recognize pieces of text that match a specification
 \item Replace them according to a procedure
@@ -497,7 +497,8 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Racket: Hacks don't scale}
+\frametitle<1->{Racket: The \texttt{aunless} macro}
+\frametitle<2->{Racket: Being unhygienic doesn't scale}
 \begin{semiverbatim}
 \text{\color<3->{teal}{(aunless (not (calculate))}}
   \text{\color<3->{teal}{(print it)}}
@@ -569,9 +570,10 @@ Future work:
 \begin{frame}[fragile]
 \frametitle{scalamacros.org}
 \begin{itemize}
-\item Since this semester Scala has macros
+\item Since this spring Scala has macros
 \item Even better: macros are an official part of the language in the next production release 2.10.0
 \item Now it's time to put the pens down and think about the future
+\item The future is in integration with other language features
 \end{itemize}
 \end{frame}
 
@@ -587,7 +589,7 @@ def serialize[T](x: T)\only<2->{(\only<3->{\alert<3>{implicit }}s: Serializer[T]
 \visible<3->{\only<1-3>{\alert<3>{implicit object ByteSerializer extends Serializer[Byte] \{
   def write(pickle: Pickle, x: Byte) = pickle.writeByte(x)
 \}}}\only<4->{\visible<4->{\alert<4>{implicit def generator: Serializer[T] = macro impl[T]
-
+def impl[T](c: Context): c.Expr[Serializer[T]] = ...
 }}}}
 \end{semiverbatim}
 \end{frame}
