@@ -318,15 +318,25 @@ aif cond then' else' =
   [| let temp = {\textdollar}cond
          \text{\color<2->{red}{it}} = temp
      in if temp /= 0 then {\textdollar}then' else {\textdollar}else' |]
+\only<2->{
+let temp_a1mx = calculate
+    \text{\color{red}{it_a1my}} = temp_a1mx
+in if (temp_a1mx /= 0)
+   then putStrLn (show \text{\color{blue}{it}})
+   else error "does not compute"
 
-\visible<2->{let temp_a1mx = calculate}
-    \visible<2->{\text{\color{red}{it_a1my}} = temp_a1mx}
-\visible<2->{in if (temp_a1mx /= 0)}
-   \visible<2->{then putStrLn (show \text{\color{blue}{it}})}
-   \visible<2->{else error "does not compute"}
-
-\visible<2->{\text{\color{blue}{Not in scope: `it'}}}
+\text{\color{blue}{Not in scope: `it'}}}
 \end{semiverbatim}
+
+\only<1>{
+\begin{itemize}
+\item No dedicated concept of macros
+\item Any function that returns an Exp can work as a macro
+\item Macro expansions are explicitly triggered with \texttt{\textdollar}
+\item There are quasiquotes \texttt{[| ...\ |]} and unquotes \texttt{{\textdollar}expr}
+\end{itemize}
+\vskip14pt
+}
 \end{frame}
 
 \begin{frame}[fragile]
