@@ -81,14 +81,14 @@ Use cases:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Macrology}
+\frametitle{The problem}
+
+Inadvertent variable capture:
 \begin{itemize}
-\item Notation
-\item \text{\color{blue}{Bindings}}
-\item Typechecking
-\item Syntax extensibility
-\item ...
+\item Macro expansions sometimes cause name clashes
+\item Some identifiers end up referring to variables from other scopes
 \end{itemize}
+
 \end{frame}
 
 % \begin{frame}[fragile]
@@ -104,7 +104,7 @@ Use cases:
 \tableofcontents
 \end{frame}
 
-\section{The prelude of macros}
+\section{The prelude of macros: introduces the running example}
 
 \begin{frame}[fragile]
 \frametitle{A detour: how Lisp works}
@@ -194,7 +194,7 @@ Use cases:
 \end{itemize}
 \end{frame}
 
-\section{The chapter of bindings}
+\section{The chapter of bindings: illustrates the problem of variable capture}
 
 \begin{frame}[fragile]
 \frametitle{The \texttt{aif} macro is buggy}
@@ -277,7 +277,7 @@ Use cases:
 \text{\color{blue}{And please don't rename core forms}}
 \end{frame}
 
-\section{The trilogy of tongues}
+\section{The trilogy of tongues: surveys macro systems that solve this problem}
 
 \begin{frame}[fragile]
 \frametitle{Three macro-enabled languages}
@@ -565,10 +565,10 @@ Future work:
 \end{itemize}
 \end{frame}
 
-\section{The vision of the days to come}
+\section{The vision of the days to come: presents the research proposal}
 
 \begin{frame}[fragile]
-\frametitle{scalamacros.org}
+\frametitle{Scala macros}
 \begin{itemize}
 \item Since this spring Scala has macros
 \item Even better: macros are an official part of the language in the next production release 2.10.0
