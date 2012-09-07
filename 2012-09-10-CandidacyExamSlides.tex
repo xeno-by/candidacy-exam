@@ -498,7 +498,7 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Doesn't scale}
+\frametitle{Racket: Hacks don't scale}
 \begin{semiverbatim}
 \text{\color<3->{teal}{(aunless (not (calculate))}}
   \text{\color<3->{teal}{(print it)}}
@@ -518,19 +518,26 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Solution: dynamic variables}
+\frametitle{Racket: Syntax parameters}
 \begin{semiverbatim}
 
-\alert{(define-syntax-parameter it (syntax-rules ()))}
+\text{\color{teal}{(define-syntax-parameter it (syntax-rules ()))}}
 
 (define-syntax (aif stx)
   (syntax-case stx ()
     ((aif cond then else)
      #'(let ((temp cond))
-         \alert{(syntax-parameterize}
-         \alert{((it (syntax-rules () ((_) temp))))}
-           (if temp then else))))))
+             \text{\color{teal}{(syntax-parameterize}}
+               \text{\color{teal}{((it (syntax-rules () ((_) temp))))}}
+         (if temp then else))))))
+
 \end{semiverbatim}
+
+\begin{itemize}
+\item \texttt{it} becomes a compile-time dynamic variable
+\item Therefore its scope overarches all potential expansions
+\item High-level language feature (dynamic variables) + macros = win
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
