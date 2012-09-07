@@ -50,11 +50,20 @@
 }
 
 \begin{frame}[fragile]
-\frametitle{Macros}
-\pause
-Macros realize the notion of textual abstraction.
+\frametitle{What are macros?}
+Macros in programming languages:
+\begin{itemize}
+\item C macros
+\item Lisp macros
+\item ...
+\end{itemize}
 
-Textual abstraction:
+\vskip25pt
+What is the underlying concept?
+\vskip25pt
+\pause
+
+Macros realize the notion of textual abstraction:
 \begin{itemize}
 \item Recognize pieces of text that match a specification
 \item Replace them according to a procedure
@@ -77,6 +86,17 @@ Use cases:
 \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile]
+\frametitle{Macrology}
+\begin{itemize}
+\item Notation
+\item \text{\color{blue}{Variable capture}}
+\item Typechecking
+\item Syntax extensibility
+\item ...
+\end{itemize}
+\end{frame}
+
 % \begin{frame}[fragile]
 % \frametitle{Alexandre Dumas}
 
@@ -88,29 +108,47 @@ Use cases:
 \section{The prelude of macros}
 
 \begin{frame}[fragile]
-\frametitle<1>{\texttt{if} in Lisp}
-\frametitle<2>{Anaphoric \texttt{if}}
-\frametitle<3>{The \texttt{aif} macro}
-\frametitle<4>{Low-level implementation}
-\frametitle<5>{Quasiquoting: static template}
-\frametitle<6>{Quasiquoting: dynamic holes}
+\frametitle{A detour: how Lisp works}
 \begin{semiverbatim}
-(\only<2->{a}if (calculate)
-  (print \only<1>{"success"}\only<2->{it})
+(if (calculate)
+  (print "success")
+  (error "does not compute"))
+\end{semiverbatim}
+
+\vskip50pt
+
+\begin{itemize}
+\item S-expressions: atoms and lists
+\item \texttt{print} and \texttt{error} are one-argument functions
+\item \texttt{calculate} is a zero-argument function
+\item \texttt{if} is a special form
+\item All values can be used in conditions
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle<1>{Anaphoric \texttt{if}}
+\frametitle<2>{The \texttt{aif} macro}
+\frametitle<3>{Low-level implementation}
+\frametitle<4>{Quasiquoting: static template}
+\frametitle<5>{Quasiquoting: dynamic holes}
+\begin{semiverbatim}
+(aif (calculate)
+  (print it)
   (error "does not compute"))
 
-\visible<3->{(defmacro aif args}
-  \visible<4->{\only<4>{(list 'let* (list (list 'temp (car args))}}\only<5->{\alert{`}(let* ((temp \only<5>{...........)}\only<6->{\alert{,(car args)})}}
-          \visible<4->{\only<4>{          (list 'it 'temp))}\only<5->{(it temp))}}
-     \visible<4->{\only<4>{(list 'if 'temp}\only<5->{(if temp}}
-       \visible<4->{\only<4>{(cadr args)}\only<5>{............}\only<6->{\alert{,(cadr args)}}}
-       \visible<4->{\only<4>{(caddr args)))}\only<5>{............}\only<6->{\alert{,(caddr args)}})}
+\visible<2->{(defmacro aif args}
+  \visible<3->{\only<3>{(list 'let* (list (list 'temp (car args))}}\only<4->{\alert{`}(let* ((temp \only<4>{...........)}\only<5->{\alert{,(car args)})}}
+          \visible<3->{\only<3>{          (list 'it 'temp))}\only<4->{(it temp))}}
+     \visible<3->{\only<3>{(list 'if 'temp}\only<4->{(if temp}}
+       \visible<3->{\only<3>{(cadr args)}\only<4>{............}\only<5->{\alert{,(cadr args)}}}
+       \visible<3->{\only<3>{(caddr args)))}\only<4>{............}\only<5->{\alert{,(caddr args)}})}
 
-\visible<2->{(let* ((temp (calculate))}
-       \visible<2->{(it temp))}
-  \visible<2->{(if temp}
-    \visible<2->{(print it)}
-    \visible<2->{(error "does not compute")))}
+(let* ((temp (calculate))
+       (it temp))
+  (if temp
+    (print it)
+    (error "does not compute")))
 \end{semiverbatim}
 \end{frame}
 
@@ -153,6 +191,7 @@ Use cases:
 \begin{itemize}
 \item Macros are functions that transform syntax objects
 \item Quasiquotes = static templates + dynamic holes
+\item Impressive power for minimal investments from the compiler
 \end{itemize}
 \end{frame}
 
@@ -272,20 +311,19 @@ aif cond then' else' =
          \text{\color<2->{blue}{it = temp}}
      in if temp \text{\color<2->{red}{/=}} 0 then {\textdollar}then' else {\textdollar}else' |]
 
-\visible<2>{aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp}
-\visible<2>{aif cond' then'' else'' =}
-    \visible<2>{do \{ \text{\color{blue}{temp <- newName "temp"}}}
-       \visible<2>{; \text{\color{blue}{it <- newName "it"}}}
-       \visible<2>{; cond <- cond'}
-       \visible<2>{; then' <- then''}
-       \visible<2>{; else' <- else''}
-       \visible<2>{; \text{\color{red}{let notEq = mkNameG_v "ghc-prim" "GHC.Classes" "/="}}}
-         \visible<2>{in return}
-          \visible<2>{(LetE [ValD (VarP temp) (NormalB cond) [],}
-                 \visible<2>{ValD (VarP it) (NormalB (VarE temp)) []]}
-                \visible<2>{(CondE (... (VarE notEq) ...) then' else'))}
-       \visible<2>{\}}
-
+aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
+aif cond' then'' else'' =
+    do \{ \text{\color{blue}{temp <- newName "temp"}}
+       ; \text{\color{blue}{it <- newName "it"}}
+       ; cond <- cond'
+       ; then' <- then''
+       ; else' <- else''
+       ; \text{\color{red}{let notEq = mkNameG_v "ghc-prim" "GHC.Classes" "/="}}
+         in return
+          (LetE [ValD (VarP temp) (NormalB cond) [],
+                 ValD (VarP it) (NormalB (VarE temp)) []]
+                (CondE (... (VarE notEq) ...) then' else'))
+       \}
 \end{semiverbatim}
                 % (CondE (InfixE (Just (VarE temp)) (VarE notEq) (Just (LitE (IntegerL 0)))) then' else'))
 \end{frame}
