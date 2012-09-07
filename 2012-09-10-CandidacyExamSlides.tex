@@ -16,13 +16,7 @@
 \setbeamertemplate{navigation symbols}{}
 \setbeamercolor{alerted text}{fg=blue}
 \setbeamerfont{alerted text}{series=\bfseries,family=\ttfamily}
-\AtBeginSection[]
-{
-  \begin{frame}
-    \frametitle{Outline}
-    \tableofcontents[currentsection]
-  \end{frame}
-}
+\setbeamertemplate{section in toc}{\text{\color{black}{\inserttocsection}}}
 \usepackage[parfill]{parskip}
 \usepackage{color}
 \usepackage[linewidth=0.5pt]{mdframed}
@@ -104,6 +98,11 @@ Use cases:
 % \includegraphics[width=5.5cm]{dumas}
 % \end{center}
 % \end{frame}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
 
 \section{The prelude of macros}
 
@@ -301,7 +300,7 @@ by Eli Barzilay, Ryan Culpepper and Matthew Flatt
 All three languages:
 \begin{itemize}
 \item Solve the problems of hygiene and referential transparency
-\item Do this in their own interesting ways
+\item Do that in their own interesting ways
 \end{itemize}
 \end{frame}
 
@@ -388,7 +387,7 @@ in if (temp_a1mx /= 0)
 \begin{itemize}
 \item Template Haskell is auto hygienic and referentially transparent
 \item The Q monad takes care of names
-\item Sometimes we need to break hygiene
+\item \text{\color{blue}{Sometimes we need to break hygiene}}
 \end{itemize}
 \end{frame}
 
@@ -536,17 +535,32 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \begin{itemize}
 \item \texttt{it} becomes a compile-time dynamic variable
 \item Therefore its scope overarches all potential expansions
-\item High-level language feature (dynamic variables) + macros = win
+\item \text{\color{blue}{High-level language feature (dynamic variables) + macros = win}}
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Summary: overall}
+\frametitle{Summary}
+Macros:
 \begin{itemize}
-\item There are algorithms that take care of hygiene and referential transparency
-\item These algorithms can work in automatic mode, but are flexible enough to give the programmer full control
-\item Like a silver bullet
-\item Nevertheless sometimes even better solutions come from integration with language features
+\item Macros provide impressive power for their simplicity
+\item But they also give rise to unusual problems
+\item One of these problems involves mixed up bindings
+\end{itemize}
+
+\pause
+Bindings:
+\begin{itemize}
+\item Automatic hygiene and referential transparency are real
+\item Sometimes it is necessary to break hygiene
+\item There are ways of doing that
+\item Sometimes these ways are too low-level
+\end{itemize}
+
+\pause
+Future work:
+\begin{itemize}
+\item Integration with other language features provides unexpected insights
 \end{itemize}
 \end{frame}
 
