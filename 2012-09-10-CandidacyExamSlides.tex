@@ -258,7 +258,7 @@ Use cases:
 (let ((\text{\color{blue}{if hijacked}}))
   (let* ((temp (calculate))
          (it temp))
-    (\text{\color{blue}{if}} temp  \text{\color{blue}{;; hijacked if}}
+    (\text{\color{blue}{if}} temp \text{\color{blue}{;; hijacked if}}
       (print it)
       (error "does not compute"))))
 \end{semiverbatim}
@@ -301,12 +301,13 @@ by Eli Barzilay, Ryan Culpepper and Matthew Flatt
 All three languages:
 \begin{itemize}
 \item Solve the problems of hygiene and referential transparency
-\item Do it in their own interesting ways
+\item Do this in their own interesting ways
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Template Haskell: The \texttt{aif} macro}
+\frametitle<1>{Template Haskell: The \texttt{aif} macro}
+\frametitle<2>{Template Haskell: The perils of hygiene}
 \begin{semiverbatim}
 {\textdollar}(aif [| calculate |]
   [| putStrLn (show \text{\color<2->{blue}{it}}) |]
@@ -332,25 +333,23 @@ aif cond then' else' =
 \frametitle{Template Haskell: The \texttt{Q} monad}
 \begin{semiverbatim}
 aif cond then' else' =
-  [| let \text{\color<2->{blue}{temp = {\textdollar}cond}}
-         \text{\color<2->{blue}{it = temp}}
-     in if temp \text{\color<2->{red}{/=}} 0 then {\textdollar}then' else {\textdollar}else' |]
+  [| let \text{\color{blue}{temp = {\textdollar}cond}}
+         \text{\color{blue}{it = temp}}
+     in if temp \text{\color{red}{/=}} 0 then {\textdollar}then' else {\textdollar}else' |]
 
 aif :: Q Exp -> Q Exp -> Q Exp -> Q Exp
 aif cond' then'' else'' =
-    do \{ \text{\color{blue}{temp <- newName "temp"}}
+    do \{ ...
+       ; \text{\color{blue}{temp <- newName "temp"}}
        ; \text{\color{blue}{it <- newName "it"}}
-       ; cond <- cond'
-       ; then' <- then''
-       ; else' <- else''
        ; \text{\color{red}{let notEq = mkNameG_v "ghc-prim" "GHC.Classes" "/="}}
-         in return
-          (LetE [ValD (VarP temp) (NormalB cond) [],
-                 ValD (VarP it) (NormalB (VarE temp)) []]
-                (CondE (... (VarE notEq) ...) then' else'))
+         in return (LetE ... (CondE (... then' else')) ...)
        \}
 \end{semiverbatim}
-                % (CondE (InfixE (Just (VarE temp)) (VarE notEq) (Just (LitE (IntegerL 0)))) then' else'))
+          % (LetE [ValD (VarP temp) (NormalB cond) [],
+          %        ValD (VarP it) (NormalB (VarE temp)) []]
+          %       (CondE (... (VarE notEq) ...) then' else'))
+          %       (CondE (InfixE (Just (VarE temp)) (VarE notEq) (Just (LitE (IntegerL 0)))) then' else'))
 \end{frame}
 
 \begin{frame}[fragile]
@@ -377,15 +376,15 @@ in if (temp_a1mx /= 0)
 \begin{frame}[fragile]
 \frametitle{Template Haskell: Summary}
 \begin{itemize}
-\item Quasiquotes in Template Haskell are automatically hygienic and referentially transparent
-\item That's because they are lifted into the Q monad, which takes care of names (fresh names for locals,
-fully qualified names for globals)
+\item Template Haskell is auto hygienic and referentially transparent
+\item The Q monad takes care of names
 \item Sometimes we need to break hygiene
 \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Nemerle: The \texttt{aif} macro}
+\frametitle<1>{Nemerle: The \texttt{aif} macro}
+\frametitle<2>{Nemerle: The perils of hygiene}
 \begin{semiverbatim}
 aif(calculate,
   WriteLine(\text{\color<2->{blue}{it}}),
@@ -417,13 +416,13 @@ macro aif(cond, then, else_) \{
 \begin{semiverbatim}
 def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
 aif(\text{\color<2-4>{blue}{calculate}},
-  WriteLine(\text{\color<2-4>{blue}{it}}),
+  WriteLine(\text{\color<2-5>{blue}{it}}),
   throw Exception("does not compute"))
 
 macro aif(cond, then, else_) \{      \only<3->{\text{\color{red}{// expansion color}}}
   <[
     def \text{\color<3-4>{red}{temp}} = \text{\color<3-4>{blue}{{\textdollar}cond}};
-    def \only<1,2>{it}\only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}} = \text{\color<3-4>{red}{temp}};
+    def \only<1,2>{it}\only<3,4>{\text{\color{red}{it}}}\only<5>{\text{\color{blue}{{\textdollar}("it": usesite)}}} = \text{\color<3-4>{red}{temp}};    \only<5->{\text{\color{blue}{// recolor the variable}}}
     if (\text{\color<3-4>{red}{temp}} != 0) \text{\color<3-4>{blue}{{\textdollar}then}} else \text{\color<3-4>{blue}{{\textdollar}else_}}
   ]>
 \}
