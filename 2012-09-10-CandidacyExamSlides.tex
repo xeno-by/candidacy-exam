@@ -393,7 +393,7 @@ in if (temp_a1mx /= 0)
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle<1>{Nemerle: The \texttt{aif} macro}
+\frametitle<1>{Nemerle: Introduction}
 \frametitle<2>{Nemerle: The perils of hygiene}
 \begin{semiverbatim}
 aif(calculate,
@@ -431,7 +431,7 @@ if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...
 \frametitle<2>{Nemerle: Coloring algorithm}%: normal code gets a vanilla color}
 \frametitle<3>{Nemerle: Coloring algorithm}%: each expansion gets unique colors}
 \frametitle<4>{Nemerle: Coloring algorithm}%: at the end of the day}
-\frametitle<5>{Nemerle: Coloring algorithm}%: inherit use site}
+\frametitle<5>{Nemerle: Breaking hygiene}%: inherit use site}
 \begin{semiverbatim}
 def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
 aif(\text{\color<2-4>{blue}{calculate}},
@@ -464,16 +464,9 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Racket}
-A Lisp, descendent from Scheme
-
-25 years of hygienic macros, a bunch of macro systems
-
-Language features written using macros (classes, modules, etc)
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Racket}
+\frametitle<1>{Racket: Introduction}
+\frametitle<2>{Racket: The perils of hygiene}
+\frametitle<3>{Racket: Breaking hygiene}
 \begin{semiverbatim}
 \text{\color<2->{blue}{(aif (calculate)}}
   \text{\color<2->{blue}{(print it)}}
@@ -486,13 +479,22 @@ Language features written using macros (classes, modules, etc)
        #'(let ((temp cond)
                (\text{\color<3->{blue}{\color<2>{red}{it}}} temp)))
            (if temp then else)))))\visible<3->{)}
-
-\visible<2->{(let* ((temp (calculate))}
-       \visible<2->{(\text{\color<3->{blue}{\color<2>{red}{it}}} temp))}
-  \visible<2->{(if temp}
-    \visible<2->{\text{\color<2->{blue}{(print it)}}}
-    \visible<2->{\text{\color<2->{blue}{(error "does not compute")}}))}
+\only<2->{
+(let* ((temp (calculate))
+       (\text{\color<3->{blue}{\color<2>{red}{it}}} temp))
+  (if temp
+    \text{\color<2->{blue}{(print it)}}
+    \text{\color<2->{blue}{(error "does not compute")}}))}
 \end{semiverbatim}
+
+\only<1>{
+\begin{itemize}
+\item A Lisp, descendent from Scheme
+\item 25 years of hygienic macros, a bunch of macro systems
+\item Language features written using macros (classes, modules, etc)
+\end{itemize}
+\vskip7pt
+}
 \end{frame}
 
 \begin{frame}[fragile]
