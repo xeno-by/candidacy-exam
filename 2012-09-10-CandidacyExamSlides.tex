@@ -90,7 +90,7 @@ Use cases:
 \frametitle{Macrology}
 \begin{itemize}
 \item Notation
-\item \text{\color{blue}{Variable capture}}
+\item \text{\color{blue}{Bindings}}
 \item Typechecking
 \item Syntax extensibility
 \item ...
@@ -210,11 +210,11 @@ Use cases:
          \text{\color{red}{(it temp))}}
     \text{\color{red}{(if temp then else))}})
 
-\text{\color{red}{(let* ((temp \text{\color{blue}{(calculate)}})}}
-       \text{\color{red}{(it temp))}}
-  \text{\color{red}{(if temp}}
-    \text{\color{blue}{(print it)}}
-    \text{\color{blue}{(error "does not compute")}}\text{\color{red}{))}}
+\visible<2>{\text{\color{red}{(let* ((temp \text{\color{blue}{(calculate)}})}}}
+       \visible<2>{\text{\color{red}{(it temp))}}}
+  \visible<2>{\text{\color{red}{(if temp}}}
+    \visible<2>{\text{\color{blue}{(print it)}}}
+    \visible<2>{\text{\color{blue}{(error "does not compute")}}\text{\color{red}{))}}}
 \end{semiverbatim}
 \end{frame}
 
@@ -244,7 +244,7 @@ Use cases:
 \begin{frame}[fragile]
 \frametitle{Bug \#2: Violation of referential transparency}
 \begin{semiverbatim}
-(let ((\text{\color{blue}{if}} hijacked))
+(let ((\text{\color{blue}{if hijacked}}))
   (aif (calculate)
     (print it)
     (error "does not compute")))
@@ -253,19 +253,19 @@ Use cases:
   (aif cond then else)
   (let* ((temp cond)
          (it temp))
-    (\text{\color{red}{if}} temp then else)))
+    (\text{\color{red}{if}} temp then else))) \text{\color{red}{;; core if}}
 
-(let ((\text{\color{blue}{if}} hijacked))
+(let ((\text{\color{blue}{if hijacked}}))
   (let* ((temp (calculate))
          (it temp))
-    (\text{\color{blue}{if}} temp
+    (\text{\color{blue}{if}} temp  \text{\color{blue}{;; hijacked if}}
       (print it)
       (error "does not compute"))))
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Old school}
+\frametitle{Old school solution}
 \begin{semiverbatim}
 (defmacro+ aif
   (aif cond then else)
@@ -275,13 +275,38 @@ Use cases:
       (if temp then else))))
 \end{semiverbatim}
 
-And please don't rename core forms
+\text{\color{blue}{And please don't rename core forms}}
 \end{frame}
 
 \section{The trilogy of tongues}
 
 \begin{frame}[fragile]
-\frametitle{Template Haskell}
+\frametitle{Three macro-enabled languages}
+
+\emph{Template Meta-programming for Haskell} \text{\color{blue}{[Template Haskell]}}\\
+by Tim Sheard and Simon Peyton Jones
+
+\vskip15pt
+
+\emph{Meta-programming in Nemerle} \text{\color{blue}{[Nemerle]}}\\
+by Kamil Skalski, Michal Moskal and Pawel Olszta.
+
+\vskip15pt
+
+\emph{Keeping it Clean with Syntax Parameters} \text{\color{blue}{[Racket]}}\\
+by Eli Barzilay, Ryan Culpepper and Matthew Flatt
+
+\vskip15pt
+
+All three languages:
+\begin{itemize}
+\item Solve the problems of hygiene and referential transparency
+\item Do it in their own interesting ways
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Template Haskell: The \texttt{aif} macro}
 \begin{semiverbatim}
 {\textdollar}(aif [| calculate |]
   [| putStrLn (show \text{\color<2->{blue}{it}}) |]
@@ -299,12 +324,12 @@ aif cond then' else' =
    \visible<2->{then putStrLn (show \text{\color{blue}{it}})}
    \visible<2->{else error "does not compute"}
 
-\visible<2->{\text{\color{red}{Not in scope: `it'}}}
+\visible<2->{\text{\color{blue}{Not in scope: `it'}}}
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{The \texttt{Q} monad}
+\frametitle{Template Haskell: The \texttt{Q} monad}
 \begin{semiverbatim}
 aif cond then' else' =
   [| let \text{\color<2->{blue}{temp = {\textdollar}cond}}
@@ -329,7 +354,7 @@ aif cond' then'' else'' =
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Breaking hygiene}
+\frametitle{Template Haskell: Breaking hygiene}
 \begin{semiverbatim}
 {\textdollar}(aif [| calculate |]
   [| putStrLn (show \alert{{\textdollar}(dyn "it")}) |]
@@ -350,7 +375,7 @@ in if (temp_a1mx /= 0)
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Summary: Template Haskell}
+\frametitle{Template Haskell: Summary}
 \begin{itemize}
 \item Quasiquotes in Template Haskell are automatically hygienic and referentially transparent
 \item That's because they are lifted into the Q monad, which takes care of names (fresh names for locals,
@@ -360,7 +385,7 @@ fully qualified names for globals)
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Nemerle}
+\frametitle{Nemerle: The \texttt{aif} macro}
 \begin{semiverbatim}
 aif(calculate,
   WriteLine(\text{\color<2->{blue}{it}}),
@@ -379,16 +404,16 @@ macro aif(cond, then, else_) \{
 \visible<2->{def \text{\color{red}{it_1088}} = temp_1087;}
 \visible<2->{if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...")}
 
-\visible<2->{\text{\color{red}{error: unbound name `it'}}}
+\visible<2->{\text{\color{blue}{error: unbound name `it'}}}
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle<1>{Coloring algorithm}
-\frametitle<2>{Coloring algorithm: normal code gets a vanilla color}
-\frametitle<3>{Coloring algorithm: each expansion gets unique colors}
-\frametitle<4>{Coloring algorithm: at the end of the day}
-\frametitle<5>{Coloring algorithm: inherit use site}
+\frametitle<1>{Nemerle: Coloring algorithm}
+\frametitle<2>{Nemerle: Coloring algorithm}%: normal code gets a vanilla color}
+\frametitle<3>{Nemerle: Coloring algorithm}%: each expansion gets unique colors}
+\frametitle<4>{Nemerle: Coloring algorithm}%: at the end of the day}
+\frametitle<5>{Nemerle: Coloring algorithm}%: inherit use site}
 \begin{semiverbatim}
 def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
 aif(\text{\color<2-4>{blue}{calculate}},
@@ -411,9 +436,9 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{Summary: Nemerle}
+\frametitle{Nemerle: Summary}
 \begin{itemize}
-\item Nemerle takes care of hygiene with a coloring algorithm of impressive simplicity and power
+\item Nemerle takes care of hygiene with a coloring algorithm
 \item No complex translation algorithms are necessary
 \item As another bonus programmer can fine-tune colors with \texttt{MacroColors}
 \item Referential transparency works as well
@@ -427,8 +452,6 @@ A Lisp, descendent from Scheme
 25 years of hygienic macros, a bunch of macro systems
 
 Language features written using macros (classes, modules, etc)
-
-Q: "How to turn macros into proper abstractions?"
 \end{frame}
 
 \begin{frame}[fragile]
@@ -463,8 +486,8 @@ Q: "How to turn macros into proper abstractions?"
 
 (define-syntax (aunless stx)
   (syntax-case stx ()
-    ((aunless cond then else)
-     \text{\color<2->{blue}{#'(aif (not cond) then else)}})))
+    (\alert<1>{(aunless cond then else)}
+     \text{\color<2->{blue}{\alert<1>{#'(aif (not cond) then else)}}})))
 
 \text{\color<2->{red}{(let* ((temp (not (not (calculate))))}}
        \text{\color<2->{red}{(}}\text{\color<2->{blue}{it}} \text{\color<2->{red}{temp))}}
