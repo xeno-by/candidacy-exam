@@ -25,6 +25,7 @@
 \usepackage{graphicx}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg}
 \usepackage{textcomp}
+\usepackage{pifont}
 
 \hypersetup{pdfauthor={Eugene Burmako},pdfsubject={Metaprogramming with Macros},pdftitle={Metaprogramming with Macros}}
 \title{Scala Macros}
@@ -692,6 +693,29 @@ def g = List(1, 2, 3) map inc map inc map inc fuse
 \item Desktop fusion achieved!
 \item How to deal with side effects?
 \item Also what about data flow analysis?
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Macros for verification: Courtesy of Alexander Kuklev}
+\begin{semiverbatim}
+trait SemiGroup[T] extends Eq[T] \{
+  def \ensuremath{\circ}(a: T, b: T): T
+  def associativity(a: T, b: T, c: T):
+    \ding{51}((a \ensuremath{\circ} (b \ensuremath{\circ} c)) == ((a \ensuremath{\circ} b) \ensuremath{\circ} c))
+\}
+
+def reduce[T](op: (T, T) => T): T
+
+def reduce[T](op: (T, T) => T)(implicit evidence:
+  \ding{51}((a: T, b: T, c: T) => op(op(a, b), c) == op(a, op(b, c)))
+): T
+\end{semiverbatim}
+
+\begin{itemize}
+\item Facts are encoded with the \ding{51} macro
+\item Proofs are requested with implicit parameters
+\item Proofs can either be inferred by implicit macros or provided by hand
 \end{itemize}
 \end{frame}
 
