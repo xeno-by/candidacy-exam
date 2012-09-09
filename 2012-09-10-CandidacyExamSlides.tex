@@ -66,9 +66,26 @@ The notion of textual abstraction:
 \end{frame}
 
 \begin{frame}[fragile]
+\frametitle{What are macros?}
+\begin{semiverbatim}
+printf("Hello %s!", "World")
+\end{semiverbatim}
+
+\hskip70pt
+\begin{tikzpicture}
+\draw[line width=0.8pt] [->] (0.0, 0.0) -- (0.0, -2.5) node[pos=0.5, right] {\small{macro}};
+\end{tikzpicture}
+
+\begin{semiverbatim}
+def formatter(arg1: Any) = "Hello " + arg1.toString + "!"
+print(formatter("World"))
+\end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
 \frametitle{Why macros?}
 
-Work with syntax trees, therefore are not bound by the semantics of the underlying
+Work with lexical tokens or syntax trees, therefore are not bound by the semantics of the underlying
 programming language
 
 Use cases:
@@ -82,7 +99,19 @@ Use cases:
 \end{frame}
 
 \begin{frame}[fragile]
-\frametitle{The problem}
+\frametitle{Challenges in macrology}
+
+\begin{itemize}
+\item Notation
+\item \text{\color{blue}{Variable capture}}
+\item Typechecking
+\item Syntax extensibility
+\item ...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The focus of this talk}
 
 Inadvertent variable capture:
 \begin{itemize}
@@ -105,8 +134,6 @@ Inadvertent variable capture:
 \tableofcontents
 \end{frame}
 
-\section{The prelude of macros: introduces the running example}
-
 \begin{frame}[fragile]
 \frametitle{A detour: how Lisp works}
 \begin{semiverbatim}
@@ -125,6 +152,8 @@ Inadvertent variable capture:
 \item All values can be used in conditions
 \end{itemize}
 \end{frame}
+
+\section{The prelude of macros: introduces the running example}
 
 \begin{frame}[fragile]
 \frametitle<1>{Anaphoric \texttt{if}}
