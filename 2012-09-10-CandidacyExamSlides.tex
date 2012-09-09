@@ -414,7 +414,7 @@ in if (temp_a1mx /= 0)
 \begin{frame}[fragile]
 \frametitle{Template Haskell: Summary}
 \begin{itemize}
-\item Template Haskell is auto hygienic and referentially transparent
+\item In Template Haskell quasiquotes are compiled down to the Q monad
 \item The Q monad takes care of names
 \item \text{\color{blue}{Sometimes we need to break hygiene}}
 \end{itemize}
@@ -456,12 +456,12 @@ if (temp_1087 != 0) WriteLine(\text{\color{blue}{it}}) else throw Exception("...
 
 \begin{frame}[fragile]
 \frametitle<1>{Nemerle: Coloring algorithm}
-\frametitle<2>{Nemerle: Coloring algorithm}%: normal code gets a vanilla color}
+\frametitle<2>{Nemerle: Coloring algorithm}%: normal code gets a top-level color}
 \frametitle<3>{Nemerle: Coloring algorithm}%: each expansion gets unique colors}
 \frametitle<4>{Nemerle: Coloring algorithm}%: at the end of the day}
 \frametitle<5>{Nemerle: Breaking hygiene}%: inherit use site}
 \begin{semiverbatim}
-def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// vanilla color}}}
+def \text{\color<2-4>{blue}{calculate}} = 42;                 \only<2->{\text{\color{blue}{// top-level color}}}
 aif(\text{\color<2-4>{blue}{calculate}},
   WriteLine(\text{\color<2-5>{blue}{it}}),
   throw Exception("does not compute"))
@@ -535,8 +535,8 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 
 (define-syntax (aunless stx)
   (syntax-case stx ()
-    (\alert<1>{(aunless cond then else)}
-     \text{\color<2->{blue}{\alert<1>{#'(aif (not cond) then else)}}})))
+    ((aunless cond then else)
+     \text{\color<2->{blue}{#'(aif (not cond) then else)}})))
 
 \text{\color<2->{red}{(let* ((temp (not (not (calculate))))}}
        \text{\color<2->{red}{(}}\text{\color<2->{blue}{it}} \text{\color<2->{red}{temp))}}
@@ -544,6 +544,17 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
     \text{\color<3->{teal}{(print it)}}
     \text{\color<3->{teal}{(error "does not compute")}}))
 \end{semiverbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Racket: In a search for a better solution}
+\begin{itemize}
+\item We're trying to introducing a variable that transcends scopes
+\item And we're doing this by manually passing this variable
+\item But the same problem was already solved in Lisp at runtime level
+\item The solution is to use dynamic variables
+\item We can try to marry this language feature with macros
+\end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
