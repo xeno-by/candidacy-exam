@@ -11,7 +11,7 @@
   \hfill%
   \usebeamercolor[fg]{page number in head/foot}%
   \usebeamerfont{page number in head/foot}%
-  \insertpagenumber\kern1em\vskip2pt%
+  \footnotesize\insertpagenumber\kern1em\vskip2pt%
 }
 \setbeamertemplate{navigation symbols}{}
 \setbeamercolor{alerted text}{fg=blue}
@@ -601,10 +601,143 @@ Marry macros and high-level language features:
 
 \begin{itemize}
 \item Macros + functions $\rightarrow$ programmable inlining, specialization, fusion
-\item Macros + annotations $\rightarrow$ code contracts
-\item Macros + path-dependent types $\rightarrow$ controlled effects
+\item Macros + annotations $\rightarrow$ code contracts, statically-typed decorators
 \item Macros + implicits $\rightarrow$ static verification
 \item ...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\vskip50pt
+\begin{center}
+\large Backup slides
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Scala in the present: Macro defs}
+\begin{semiverbatim}
+object Asserts \{
+  def assertionsEnabled = ...
+  def raise(msg: Any) = throw new AssertionError(msg)
+
+  def assert(cond: Boolean, msg: Any) = macro impl
+  def impl(c: Context)
+          (cond: c.Expr[Boolean], msg: c.Expr[Any]) =
+    if (assertionsEnabled)
+      c.reify(if (!cond.eval) raise(msg.eval))
+    else
+      c.reify(())
+\}
+\end{semiverbatim}
+
+\begin{itemize}
+\item Separate macro definitions and implementations
+\item \texttt{reify} ensures hygiene and referential transparency
+\item \texttt{reify} also implements the notion of quasiquoting
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Scala in the future: Type macros}
+\begin{semiverbatim}
+type MySqlDb(connString: String) = macro ...
+
+type MyDb = Base with MySqlDb("Server=127.0.0.1")
+
+import MyDb._
+val products = new MyDb().products
+products.filter(p => p.name.startsWith("foo")).toList
+
+\end{semiverbatim}
+
+\begin{itemize}
+\item Generalize macros from term refs to symbol refs
+\item Type macros can generate arbitrary amounts of publicly visible defs
+\item Enables an astounding multitude of techniques
+\item The problem of erasure
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Scala in the future: Macro annotations}
+\begin{semiverbatim}
+class atomic extends MacroAnnotation \{
+  def complete(defn: _) = macro("generate a backing field")
+  def typeCheck(defn: _) = macro("return defn itself")
+\}
+
+@atomic var fld: Int
+
+\end{semiverbatim}
+
+\begin{itemize}
+\item Statically-typed analogue of Python's decorators
+\item Operates on arbitrary definitions
+\item Two-step expansion: macro-level + micro-level
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking disciplines: Strict}
+\begin{semiverbatim}
+-| fun pow n = <fn x =>
+    ~(if n = 0 then <1> else <x * (~(pow (n - 1)) x)>)>;
+val pow = fn : int -> <int -> int>
+
+-| val cube = (pow 3);
+val cube = <(fn a => x %* x %* x %* 1)> : <int -> int>
+
+-| (run cube) 5;
+val it = 125 : int
+
+\end{semiverbatim}
+
+\begin{itemize}
+\item Each quasiquote is typechecked in isolation
+\item All quasiquotes are assigned "code of something" types
+\item E.g. right-hand side of \texttt{pow} is a code of function from \texttt{int} to \texttt{int}
+\item Hence no pattern matching and no new bindings
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking disciplines: Lenient}
+\begin{semiverbatim}
+[| 'a' + True |] -- rejected
+
+printf :: String -> Expr -- allowed
+{\textdollar}(printf "Error: %s on line %d") "urk" 341
+
+f :: Q Type -> Q [Dec] -- rejected
+f t = [d| data T = MkT {\textdollar}t; g (MkT x) = x + 1 |]
+
+\end{semiverbatim}
+
+\begin{itemize}
+\item Quasiquotes are sanity-checked early, fully typechecked later
+\item But require their bindings to be established in advance
+\item Not flexible enough, e.g. no splicing into binding positions
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Typechecking disciplines: Deferred}
+\begin{semiverbatim}
+macro using(name, expr, body) \{
+  <[
+    def {\textdollar}name = {\textdollar}expr;
+    try \{ {\textdollar}body \} finally \{ {\textdollar}name.Dispose() \}
+  ]>
+\}
+using(db, Database("localhost"), db.LoadData())
+
+\end{semiverbatim}
+
+\begin{itemize}
+\item Quasiquotes are not typechecked at all
+\item Typechecking only happens after macro expansion
+\item This gives ultimate flexibility at the cost of delayed error detection
 \end{itemize}
 \end{frame}
 
