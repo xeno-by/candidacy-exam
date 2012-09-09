@@ -386,7 +386,7 @@ are mechanically merged by the expander.
 Conider the \small \texttt{or} \normalsize macro shown on Figure 2a. This macro picks one of its two arguments
 based on the truthiness of the first argument. To prevent double evaluation, the macro introduces
 a temporary variable \small \texttt{temp} \normalsize that holds the result of evaluation of the first argument.
-The temporary variable is then tested with \small \texttt{if} \normalsize, which selects the resulting value.
+The temporary variable is then tested with \small \texttt{if}\normalsize, which selects the resulting value.
 
 As simple as this code can be, it is also incorrect, having two potential bugs.
 
@@ -447,8 +447,8 @@ undesired \cite{clinger91a,hoyte08}.
 Another popular line of thought favors further empowerment of macro systems
 to minimize the necessity for low-level tinkering.
 In fact, one of the macro systems reviewed below provides a design pattern \cite{barzilay11}
-that solves the \small \texttt{abort} \normalsize challenge in a fully hygienic way (i.e. without introducing
-identifiers with manually provided names).
+that solves the \small \texttt{abort} \normalsize challenge in a hygienic way (i.e. without having
+generated identifiers bind across logical scopes).
 
 \begin{figure*}[t]
 \begin{listing}
@@ -484,7 +484,7 @@ printf :: String -> Expr -- allowed
 $(printf "Error: %s on line %d") "urk" 341
 
 f :: Q Type -> Q [Dec] -- rejected
-f t = [d| data T = MkT $t; g (MkT x) = g+1 |]
+f t = [d| data T = MkT $t; g (MkT x) = x + 1 |]
 \end{verbatim}
 \end{tabular}
 
@@ -615,7 +615,7 @@ Nemerle \cite{skalski04} and Racket \cite{barzilay11}
 in the light of hygiene and referential transparency.
 
 Syntax objects in all three presented macro systems can be manipulated
-both at low level (using raw construction of corresponding data structure)
+both at low level (using raw construction of corresponding data structures)
 and at high level (with the help of quasiquotation facilities).
 
 However in this survey we will only be studying and evaluating high-level notations and APIs.
@@ -637,8 +637,7 @@ compilation of macros and their usages, whereas Racket allows
 joint compilation with extra precautions against cross-stage pollution of top-level scope \cite{flatt02}.
 
 Finally, in Nemerle and Racket macros can change the syntax of the language.
-As mentioned in the introduction, syntax extensibility is a lively
-research topic, but it is outside the scope of this study.
+Syntax extensibility is a lively research topic, but it is outside the scope of this study.
 
 \subsection{Template Haskell}
 
@@ -718,9 +717,9 @@ Unfortunately this approach has limitations.
 
 First of all, in general case roles
 of identifiers in quasiquotes (binder, bound within quasiquote, bound outside) cannot be determined
-before macro expansion. For example, in \small \texttt{[|~f~\$p~=~x~+~y~|]}\normalsize,
+in advance. For example, in \small \texttt{[|~f~\$p~=~x~+~y~|]}\normalsize,
 variables \small \texttt{x} \normalsize and \small \texttt{y} \normalsize are on the fence
-until the quasiquote is evaluated. To the contrast, the translation algorithm requires an up-front decision,
+until the splicee is evaluated. To the contrast, the translation algorithm requires an up-front decision,
 which makes splices into binding positions unsupported.
 
 Secondly, there is no way to opt out of hygiene without dropping to low level.
@@ -802,7 +801,8 @@ to ensure that selected parts of corresponding expansions can see each other.
 Finally Nemerle supports polychromatic symbols that bind
 to the nearest definitions with the same name regardless of the color.
 
-Nemerle also provides most frequently used patterns of tweaks to bindings as a part of the core language.
+Standard distribution of Nemerle also bundles most frequently used patterns of tweaks to bindings.
+For example,
 \small \texttt{\$(name:~usesite)} \normalsize introduces a symbol colored identically to the macro call site.
 \small \texttt{[Hygienic]} \normalsize attribute on a function (usually used on helper functions that can be
 called multiple times from the same macro) colors binders that come from that function in a color that
@@ -811,7 +811,7 @@ is generated afresh for every invocation.
 \subsection{Racket}
 
 Racket is a dynamically typed descendant of Scheme.
-It uses Scheme's \small \texttt{syntax-case} \normalsize, a hygienic and referentially
+It uses Scheme's \small \texttt{syntax-case}\normalsize, a hygienic and referentially
 transparent macro system, augmented with syntax classes.
 
 To prevent inadvertent captures \small \texttt{syntax-case} \normalsize employs Dybvig's algorithm
@@ -920,7 +920,7 @@ Typechecking algorithms that catch errors in meta-programs are pioneered by Meta
 Its static typechecking discipline for quasiquotes has proven to be overly restrictive when applied to
 macros. Template Haskell features a lenient typechecking algorithm, which unfortunately remains too
 restrictive. Therefore Nemerle doesn't typecheck quasiquotes at all, relying on a mandatory typecheck
-after macro expansion. This area is in a clear need of improvement.
+after macro expansion. This area is in a need of improvement.
 
 Evolution of Lisp identified the problems that cause
 inadvertent capture and formulated the principles of hygiene and referential transparency
@@ -945,8 +945,9 @@ a minimalistic non-hygienic macro system into a hygienic facility with quasiquot
 
 Currently \small \texttt{reify} \normalsize only works with statically well-typed syntax objects.
 This makes it akin to MacroML \cite{ganz01} with all the pros and cons. On the one hand, this
-technique prevents macros from producing ill-typed code. But on the other hand,
-\small \texttt{reify} \normalsize becomes inapplicable when pattern matching or statically untypeable
+technique prevents macros based on \small \texttt{reify} \normalsize
+from producing ill-typed code. But on the other hand,
+it becomes inapplicable when pattern matching or statically untypeable
 quasiquotes are involved.
 
 Our experience and user reports show a clear need for more flexibility, but we would not like to give up
