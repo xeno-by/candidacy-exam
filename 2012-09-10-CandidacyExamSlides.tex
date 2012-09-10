@@ -1,4 +1,4 @@
-\documentclass[hyperref={bookmarks=false}]{beamer}
+\documentclass[svgnames,hyperref={bookmarks=false}]{beamer}
 \useoutertheme{infolines}
 \setbeamertemplate{headline}{} % removes the headline that infolines inserts
 % \setbeamertemplate{footline}{
@@ -18,7 +18,6 @@
 \setbeamerfont{alerted text}{series=\bfseries,family=\ttfamily}
 \setbeamertemplate{section in toc}{\text{\color{black}{\inserttocsection}}}
 \usepackage[parfill]{parskip}
-\usepackage{color}
 \usepackage[linewidth=0.5pt]{mdframed}
 \newmdenv[innerleftmargin=1mm, innerrightmargin=1mm, innertopmargin=-1mm, innerbottommargin=2mm, leftmargin=-1mm, rightmargin=-1mm]{lstlistinglike}
 \usepackage{tikz}
@@ -529,9 +528,9 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \frametitle<1->{Racket: The \texttt{aunless} macro}
 \frametitle<2->{Racket: Being unhygienic doesn't scale}
 \begin{semiverbatim}
-\text{\color<3->{teal}{(aunless (not (calculate))}}
-  \text{\color<3->{teal}{(print it)}}
-  \text{\color<3->{teal}{(error "does not compute"))}}
+\text{\color<3->{Green}{(aunless (not (calculate))}}
+  \text{\color<3->{Green}{(print it)}}
+  \text{\color<3->{Green}{(error "does not compute"))}}
 
 (define-syntax (aunless stx)
   (syntax-case stx ()
@@ -541,18 +540,23 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \text{\color<2->{red}{(let* ((temp (not (not (calculate))))}}
        \text{\color<2->{red}{(}}\text{\color<2->{blue}{it}} \text{\color<2->{red}{temp))}}
   \text{\color<2->{red}{(if temp}}
-    \text{\color<3->{teal}{(print it)}}
-    \text{\color<3->{teal}{(error "does not compute")}}))
+    \text{\color<3->{Green}{(print it)}}
+    \text{\color<3->{Green}{(error "does not compute")}}))
 \end{semiverbatim}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Racket: In a search for a better solution}
+What we are doing:
 \begin{itemize}
 \item We're trying to introducing a variable that transcends scopes
-\item And we're doing this by manually passing this variable
+\item And we're doing this by manually passing this variable around
+\end{itemize}
 \pause
-\item But the same problem was already solved in Lisp at runtime level
+\vskip50pt
+How we can do better:
+\begin{itemize}
+\item The same problem is already solved in Lisp at runtime level
 \item The solution is to use dynamic variables
 \item We can try to marry this language feature with macros
 \end{itemize}
@@ -562,14 +566,14 @@ if (\text{\color<4-4>{red}{temp}} != 0) WriteLine(\text{\color<4->{blue}{it}}) e
 \frametitle{Racket: Syntax parameters}
 \begin{semiverbatim}
 
-\text{\color{teal}{(define-syntax-parameter it (syntax-rules ()))}}
+\text{\color{blue}{(define-syntax-parameter it (syntax-rules ()))}}
 
 (define-syntax (aif stx)
   (syntax-case stx ()
     ((aif cond then else)
      #'(let ((temp cond))
-             \text{\color{teal}{(syntax-parameterize}}
-               \text{\color{teal}{((it (syntax-rules () ((_) temp))))}}
+             \text{\color{red}{(syntax-parameterize}}
+               \text{\color{red}{((it (syntax-rules () ((_) temp))))}}
          (if temp then else))))))
 
 \end{semiverbatim}
